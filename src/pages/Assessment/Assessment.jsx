@@ -719,68 +719,24 @@ export function Assessment() {
             {/* Question Card */}
             <Card className="p-4 sm:p-6 rounded-2xl sm:rounded-3xl border border-slate-200 shadow-2xs bg-white relative">
               
-              {/* Category, Language Switcher & Mark Action */}
-              <div className="flex flex-wrap items-center justify-between gap-2 mb-3 pb-2.5 border-b border-slate-100">
-                <div className="flex items-center gap-2">
-                  <span className="text-[11px] font-bold text-blue-700 uppercase tracking-wide">
-                    {currentQuestion.category}
-                  </span>
-                </div>
+              {/* Category & Mark Action */}
+              <div className="flex items-center justify-between gap-2 mb-3 pb-2.5 border-b border-slate-100">
+                <span className="text-[11px] font-bold text-blue-700 uppercase tracking-wide">
+                  {currentQuestion.category}
+                </span>
 
-                <div className="flex items-center gap-2">
-                  {/* In-Assessment Language Switcher */}
-                  <div className="inline-flex items-center bg-slate-100/90 rounded-lg p-0.5 border border-slate-200">
-                    <button
-                      type="button"
-                      onClick={() => setLanguage('en')}
-                      className={`px-2 py-0.5 rounded text-[11px] font-bold transition-all cursor-pointer ${
-                        language === 'en'
-                          ? 'bg-white text-blue-700 shadow-2xs'
-                          : 'text-slate-600 hover:text-slate-900'
-                      }`}
-                      aria-pressed={language === 'en'}
-                    >
-                      English
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setLanguage('hi')}
-                      className={`px-2 py-0.5 rounded text-[11px] font-bold transition-all cursor-pointer ${
-                        language === 'hi'
-                          ? 'bg-white text-blue-700 shadow-2xs'
-                          : 'text-slate-600 hover:text-slate-900'
-                      }`}
-                      aria-pressed={language === 'hi'}
-                    >
-                      हिन्दी
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setLanguage('bn')}
-                      className={`px-2 py-0.5 rounded text-[11px] font-bold transition-all cursor-pointer ${
-                        language === 'bn'
-                          ? 'bg-white text-blue-700 shadow-2xs'
-                          : 'text-slate-600 hover:text-slate-900'
-                      }`}
-                      aria-pressed={language === 'bn'}
-                    >
-                      বাংলা
-                    </button>
-                  </div>
-
-                  <button
-                    type="button"
-                    onClick={handleToggleMark}
-                    className={`text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors cursor-pointer border ${
-                      isCurrentMarked
-                        ? 'bg-purple-50 text-purple-800 border-purple-200 font-bold'
-                        : 'bg-slate-50 text-slate-600 hover:text-slate-900 border-slate-200'
-                    }`}
-                    aria-pressed={isCurrentMarked}
-                  >
-                    {isCurrentMarked ? t('ui.marked') : t('ui.mark')}
-                  </button>
-                </div>
+                <button
+                  type="button"
+                  onClick={handleToggleMark}
+                  className={`text-xs font-semibold px-2.5 py-1 rounded-lg transition-colors cursor-pointer border ${
+                    isCurrentMarked
+                      ? 'bg-purple-50 text-purple-800 border-purple-200 font-bold'
+                      : 'bg-slate-50 text-slate-600 hover:text-slate-900 border-slate-200'
+                  }`}
+                  aria-pressed={isCurrentMarked}
+                >
+                  {isCurrentMarked ? 'Marked for Review' : 'Mark for Review'}
+                </button>
               </div>
 
               {/* Question Text */}
