@@ -1,0 +1,30 @@
+{
+  "hero": {
+    "badge": "Simple & Free Career Guidance",
+    "title": "Discover the Right Career Path for Your Future",
+    "subtitle": "A simple, friendly assessment to help you understand your natural strengths, interests, and matching job opportunities.",
+    "description": "Our organization helps students and job seekers find their ideal career direction. No technical computer skills needed. Take your time, there is no timer.",
+    "ctaRegister": "Student Registration",
+    "ctaLogin": "Student Login",
+    "ctaContinueTest": "Continue to The Test",
+    "ctaDashboard": "Go to Dashboard",
+    "adminPortalCta": "Go to Admin Portal →",
+    "feature1": "No time pressure",
+    "feature2": "Save & continue anytime",
+    "feature3": "100% Free guidance"
+  },
+  "partners": {
+    "title": "Our Placement & Hiring Partners",
+    "subtitle": "Organizations where our students build successful, rewarding careers."
+  },
+  "testimonials": {
+    "title": "Student Success Stories",
+    "subtitle": "Real students who found their career direction with our guidance and support.",
+    "prev": "Previous",
+    "next": "Next",
+    "verified": "Verified",
+    "batchOf": "Batch of {{year}}",
+    "paused": "Paused",
+    "autoTimer": "Auto {{seconds}}s"
+  }
+}

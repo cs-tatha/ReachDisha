@@ -1,0 +1,44 @@
+{
+  "title": "About the Career Assessment",
+  "subtitle": "Understand how this assessment works, why it matters, and how it guides your future career.",
+  "verifiedAccess": "Verified Access: {{name}}",
+  "whySection": {
+    "title": "Why Take This Assessment?",
+    "point1Title": "Clarity for Your Future",
+    "point1Desc": "Uncover careers that align with what you enjoy doing and what you are naturally good at.",
+    "point2Title": "Designed for Every Student",
+    "point2Desc": "Questions use everyday situations with clear choices. No complex academic or psychological jargon.",
+    "point3Title": "Actionable Guidance",
+    "point3Desc": "Get concrete career paths, job roles, and entry steps tailored to your strengths."
+  },
+  "howItWorks": {
+    "title": "How the Assessment Works",
+    "step1Title": "Step 1: Answer Questions Honestly",
+    "step1Desc": "Read each straightforward question and pick the option that feels most natural to you. There are no right or wrong answers.",
+    "step2Title": "Step 2: Take Your Time",
+    "step2Desc": "There is strictly no countdown timer. If you need a break, your answers are saved automatically so you can resume anytime.",
+    "step3Title": "Step 3: Review Matching Career Paths",
+    "step3Desc": "Explore career categories and specific job roles that suit your unique interests and strengths."
+  },
+  "guarantee": {
+    "title": "Our Promise to You",
+    "desc": "Your progress is always saved safely. You can start on your phone and finish on a computer, or pause whenever you need."
+  },
+  "readyTitle": "Ready to Discover Your Natural Strengths?",
+  "readyDesc": "Welcome, {{name}}! Your account is verified and ready. You can now proceed to take the career assessment. There are no right or wrong answers — choose what fits you best.",
+  "factTime": "~15 Minutes (Untimed)",
+  "factQuestions": "20 Situational Questions",
+  "factSaved": "Progress Auto-Saved",
+  "proceedCta": "Proceed to Test Now →",
+  "activeSession": {
+    "badge": "Active Assessment Found",
+    "title": "You Have Already Started Your Assessment!",
+    "subtitle": "Your previous answers have been safely saved. You can continue directly from where you left off, or check your profile in the dashboard.",
+    "statusPill": "Question {{current}} of {{total}} • {{answered}} Answered",
+    "resumeCta": "Resume Assessment →",
+    "dashboardCta": "Go to Dashboard",
+    "profileTip": "Tip: You can also access your dashboard at any time by clicking your profile icon or the Dashboard button in the navigation bar.",
+    "readyResumeTitle": "Continue Your Assessment",
+    "readyResumeDesc": "Welcome back, {{name}}! Pick up right where you left off without losing a single answer."
+  }
+}

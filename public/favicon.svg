@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <rect width="48" height="48" rx="12" fill="url(#grad)" />
+  <defs>
+    <linearGradient id="grad" x1="0" y1="48" x2="48" y2="0" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#1d4ed8" />
+      <stop offset="0.5" stop-color="#4338ca" />
+      <stop offset="1" stop-color="#2563eb" />
+    </linearGradient>
+  </defs>
+  <!-- Left Road Boundary -->
+  <path d="M10 46L19.5 3" stroke="white" stroke-width="4.4" stroke-linecap="round" />
+  <!-- Right Road Boundary -->
+  <path d="M38 46L28.5 3" stroke="white" stroke-width="4.4" stroke-linecap="round" />
+  <!-- Center Dashed Lane Divider -->
+  <path d="M24 45V37" stroke="white" stroke-width="4" stroke-linecap="round" />
+  <path d="M24 30.5V24.5" stroke="white" stroke-width="3.8" stroke-linecap="round" />
+  <path d="M24 18V13.5" stroke="white" stroke-width="3.4" stroke-linecap="round" />
+  <path d="M24 8V5" stroke="white" stroke-width="3" stroke-linecap="round" />
+</svg>

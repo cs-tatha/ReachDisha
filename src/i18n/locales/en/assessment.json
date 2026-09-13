@@ -1,0 +1,89 @@
+{
+  "loading": "Preparing your assessment sections, hang tight...",
+  "intro": {
+    "badge": "Reach Disha 6-Section Psychometric Evaluation",
+    "title": "Psychometric Career Assessment",
+    "subtitle": "Personalized, scientifically calibrated 6-section assessment designed to evaluate aptitude, personality, work preferences, emotional intelligence, career passions, and practical execution.",
+    "startBtn": "Start Assessment Now →",
+    "resumeBtn": "Resume Assessment →",
+    "retakeBtn": "Retake Assessment",
+    "sixSectionsBadge": "6 Comprehensive Evaluation Sections"
+  },
+  "sections": {
+    "title": "Assessment Sections",
+    "sectionOf": "Section {{current}} of {{total}}",
+    "sectionProgress": "{{answered}} of {{total}} answered",
+    "allCompleted": "All questions answered",
+    "nextSection": "Next Section: {{name}} →",
+    "prevSection": "← Prev Section",
+    "jumpToSection": "Jump to Section",
+    "currentSectionLabel": "Active Section",
+    "sectionQuestionOf": "Question {{current}} of {{total}} in {{section}}",
+    "overallQuestionOf": "Overall: Question {{current}} of {{total}}",
+    "variableQuestions": "{{count}} Questions (Variable from database)",
+    "aptitude": {
+      "name": "Aptitude",
+      "short": "Logic & Problem-Solving"
+    },
+    "personality": {
+      "name": "Personality",
+      "short": "Behavioral Traits"
+    },
+    "work_style": {
+      "name": "Work Style",
+      "short": "Workflow & Team Habits"
+    },
+    "emotional_intelligence": {
+      "name": "Emotional Intelligence",
+      "short": "EQ, Empathy & Composure"
+    },
+    "career_interest": {
+      "name": "Career Interest",
+      "short": "Vocational Passions"
+    },
+    "skill_and_abilities": {
+      "name": "Skill and Abilities",
+      "short": "Execution & Leadership"
+    }
+  },
+  "ui": {
+    "questionOf": "Question {{current}} of {{total}}",
+    "completed": "{{percent}}% Completed",
+    "prev": "← Previous",
+    "skip": "↷ Skip",
+    "mark": "★ Mark",
+    "marked": "★ Marked",
+    "next": "Next Question →",
+    "finish": "Finish Assessment ✓",
+    "reviewSubmit": "Review & Submit ✓",
+    "navigator": "Sectional Navigator",
+    "all": "All",
+    "skipped": "Skipped",
+    "markedFilter": "Marked",
+    "answered": "Answered",
+    "selectPrompt": "Select one option that best reflects you to advance to next question",
+    "selectAlert": "Please select an answer to proceed.",
+    "filterBySection": "Filter by Section",
+    "allSections": "All 6 Sections"
+  },
+  "modals": {
+    "confirmFinishTitle": "Review & Submit Your Assessment",
+    "confirmFinishDesc": "You have answered {{answered}} of {{total}} questions across all 6 sections. Once submitted, your comprehensive psychometric evaluation will be finalized.",
+    "submitBtn": "Yes, Finalize & Submit",
+    "cancelBtn": "Continue Testing / Review",
+    "sectionalBreakdown": "Sectional Completion Overview",
+    "sectionStatusCompleted": "Completed",
+    "sectionStatusPending": "{{count}} pending",
+    "jumpPrompt": "Click any section to jump directly to its questions."
+  },
+  "results": {
+    "badge": "Assessment Complete",
+    "title": "Your 6-Dimensional Psychometric Profile",
+    "subtitle": "Based on your situational responses across Aptitude, Personality, Work Style, Emotional Intelligence, Career Interest, and Skills & Abilities.",
+    "topSectors": "Your Top Matching Career Sectors",
+    "strengths": "Your Core Sectional Strengths",
+    "exploreBtn": "Explore Matching Careers →",
+    "downloadBtn": "Download Career Report",
+    "retakeBtn": "Retake Assessment"
+  }
+}

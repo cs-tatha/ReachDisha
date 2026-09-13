@@ -1,0 +1,21 @@
+{
+  "badge": "Reach Disha Career Pathways",
+  "title": "Explore Career Pathways & Roles",
+  "subtitle": "Discover industries, key responsibilities, and required skill sets across India's premier hiring sectors.",
+  "allSectors": "All Sectors",
+  "showingRoles": "Showing {{count}} {{roleText}} {{sectorContext}}",
+  "inSector": "in {{name}}",
+  "acrossAllSectors": "across all sectors",
+  "skillsHeading": "Key Skills",
+  "bridge": {
+    "badge": "Reach Disha Career Assessment",
+    "title": "Find Which Career Matches You Best",
+    "desc": "Take our friendly, 100% free psychometric assessment to evaluate your personality traits, strengths, and problem-solving abilities to find your ideal career fit.",
+    "check1": "No timer pressure",
+    "check2": "100% Free guidance",
+    "check3": "Instant stream analysis",
+    "cta": "Start Free Career Assessment →",
+    "returnHome": "Return to Home"
+  },
+  "transparency": "All career pathways and job profiles are formulated in partnership with Reach India Pvt. Ltd. and verified hiring partners across banking, retail, and IT networks."
+}

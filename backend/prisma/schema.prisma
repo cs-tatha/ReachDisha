@@ -1,0 +1,86 @@
+// Prisma Schema for Psychometric Assessment System
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id                Int                @id @default(autoincrement())
+  userId            String             @unique @map("user_id")
+  fullName          String             @map("full_name")
+  firstName         String?            @map("first_name")
+  middleName        String?            @map("middle_name")
+  lastName          String?            @map("last_name")
+  phone             String             @unique
+  password          String
+  role              String             @default("student") // 'student' or 'admin'
+  dob               String?
+  age               String?
+  fatherName        String?            @map("father_name")
+  motherName        String?            @map("mother_name")
+  state             String?
+  city              String?
+  pincode           String?
+  address           String?            @db.Text
+  education         String?
+  avatar            String?            @db.LongText
+  refreshToken      String?            @map("refresh_token") @db.Text
+  createdAt         DateTime           @default(now()) @map("created_at")
+  updatedAt         DateTime           @updatedAt @map("updated_at")
+  assessmentResults AssessmentResult[]
+
+  @@map("users")
+}
+
+model AssessmentResult {
+  id                 Int      @id @default(autoincrement())
+  userId             String   @map("user_id")
+  answers            Json
+  traitScores        Json     @map("trait_scores")
+  topSkillDomains    Json     @map("top_skill_domains")
+  recommendedCareers Json     @map("recommended_careers")
+  strengths          Json
+  skillGaps          Json     @map("skill_gaps")
+  createdAt          DateTime @default(now()) @map("created_at")
+
+  user User @relation(fields: [userId], references: [userId], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("assessment_results")
+}
+
+model Question {
+  id         Int      @id @default(autoincrement())
+  questionId String?  @unique @map("question_id")
+  sectionId  String   @default("aptitude") @map("section_id")
+  category   String
+  categoryHi String?  @map("category_hi")
+  categoryBn String?  @map("category_bn")
+  question   String   @db.Text
+  questionHi String?  @map("question_hi") @db.Text
+  questionBn String?  @map("question_bn") @db.Text
+  createdAt  DateTime @default(now()) @map("created_at")
+  options    Option[]
+
+  @@map("questions")
+}
+
+model Option {
+  id                Int      @id @default(autoincrement())
+  questionId        Int      @map("question_id")
+  optionKey         String   @map("option_key")
+  option            String   @db.Text
+  optionHi          String?  @map("option_hi") @db.Text
+  optionBn          String?  @map("option_bn") @db.Text
+  option_related_to String?
+  option_level      Int?     @default(1)
+  contributions     Json?    // Array of { trait: string, level: number }
+  question          Question @relation(fields: [questionId], references: [id], onDelete: Cascade)
+
+  @@index([questionId])
+  @@map("options")
+}
