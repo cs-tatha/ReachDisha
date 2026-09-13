@@ -2,6 +2,7 @@
  * 45 Psychometric Career Assessment Questions - Calibrated 6 Sections Architecture
  * Clean UI options (No L1-L5 levels shown to candidates)
  */
+import { QUESTION_TRANSLATIONS_MAP } from '@/data/translations/questionTranslations';
 
 export const ASSESSMENT_SECTIONS = [
   {
@@ -3827,7 +3828,47 @@ export function getLocalizedSection(sec, language = 'en') {
 
 export function getLocalizedQuestion(q, language = 'en') {
   if (!q) return q;
-  return q;
+  if (!language || language === 'en') return q;
+
+  const translation = QUESTION_TRANSLATIONS_MAP[q.id];
+  const langKey = language === 'hi' ? 'hi' : language === 'bn' ? 'bn' : 'en';
+
+  if (!translation) {
+    const isHi = language === 'hi';
+    const isBn = language === 'bn';
+    return {
+      ...q,
+      category: (isHi ? q.category_hi : isBn ? q.category_bn : null) || q.category,
+      question: (isHi ? q.question_hi : isBn ? q.question_bn : null) || q.question,
+      options: Array.isArray(q.options)
+        ? q.options.map((opt) => ({
+            ...opt,
+            text: (isHi ? opt.text_hi : isBn ? opt.text_bn : null) || opt.text,
+          }))
+        : q.options,
+    };
+  }
+
+  const locCategory = translation.category?.[langKey] || q.category;
+  const locQuestion = translation.question?.[langKey] || q.question;
+
+  const locOptions = Array.isArray(q.options)
+    ? q.options.map((opt) => {
+        const optKey = (opt.id || '').toLowerCase();
+        const optTrans = translation.options?.[optKey]?.[langKey];
+        return {
+          ...opt,
+          text: optTrans || (language === 'hi' ? opt.text_hi : language === 'bn' ? opt.text_bn : null) || opt.text,
+        };
+      })
+    : q.options;
+
+  return {
+    ...q,
+    category: locCategory,
+    question: locQuestion,
+    options: locOptions,
+  };
 }
 
 export default ASSESSMENT_QUESTIONS;

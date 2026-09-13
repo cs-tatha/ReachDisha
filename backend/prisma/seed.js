@@ -51,7 +51,11 @@ async function main() {
         questionId: `q-${q.id}`,
         sectionId: q.sectionId,
         category: q.category,
+        categoryHi: q.categoryHi || null,
+        categoryBn: q.categoryBn || null,
         question: q.question,
+        questionHi: q.questionHi || null,
+        questionBn: q.questionBn || null,
       },
     });
 
@@ -62,6 +66,8 @@ async function main() {
           questionId: questionRecord.id,
           optionKey: opt.id,
           option: opt.text,
+          optionHi: opt.textHi || null,
+          optionBn: opt.textBn || null,
           option_level: opt.level,
           option_related_to: q.category,
           contributions: opt.contributions,
