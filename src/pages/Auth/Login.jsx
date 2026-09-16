@@ -47,12 +47,6 @@ export function Login() {
     }
   }
 
-  const fillDemoCredentials = () => {
-    setIdentifier('9123456780')
-    setPassword('student123')
-    setError('')
-  }
-
   return (
     <div className="min-h-[calc(100vh-68px)] flex items-center justify-center py-10 sm:py-16 px-4 sm:px-6 lg:px-8 bg-slate-50/70 relative overflow-hidden">
       {/* Subtle Background Ambience */}
@@ -241,8 +235,8 @@ export function Login() {
               </div>
             </div>
 
-            {/* Remember Me & Help Row */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 text-xs sm:text-sm">
+            {/* Remember Me Row */}
+            <div className="flex items-center justify-between gap-2 pt-1 text-xs sm:text-sm">
               <label className="flex items-center gap-2.5 text-slate-700 font-medium cursor-pointer select-none">
                 <input
                   type="checkbox"
@@ -252,10 +246,6 @@ export function Login() {
                 />
                 <span>{t('auth.rememberMe')}</span>
               </label>
-
-              <span className="text-slate-500 text-xs">
-                Demo: <strong className="text-slate-700 font-bold font-mono">student123</strong>
-              </span>
             </div>
 
             {/* Primary Action Button */}
@@ -275,15 +265,6 @@ export function Login() {
                 )}
               </Button>
             </div>
-
-            {/* 1-Click Demo Fill Button */}
-            <button
-              type="button"
-              onClick={fillDemoCredentials}
-              className="w-full py-2.5 px-4 rounded-xl border border-dashed border-blue-300 bg-blue-50/40 hover:bg-blue-50 text-xs sm:text-sm font-bold text-blue-700 hover:text-blue-800 flex items-center justify-center gap-2 transition-all cursor-pointer select-none"
-            >
-              <span>{t('auth.demoStudentBtn')}</span>
-            </button>
           </form>
 
           {/* Registration Promotion Section */}

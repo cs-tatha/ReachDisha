@@ -89,7 +89,6 @@ export function Register() {
     handleSubmit,
     trigger,
     control,
-    setValue,
     formState: { errors, isSubmitting },
   } = useForm({
     resolver: zodResolver(registrationSchema),
@@ -143,28 +142,6 @@ export function Register() {
     window.scrollTo({ top: 120, behavior: 'smooth' })
   }
 
-  // Quick Demo Auto-fill Helper for testing
-  const fillSampleData = () => {
-    setValue('firstName', 'Aarav')
-    setValue('middleName', 'Kumar')
-    setValue('lastName', 'Sharma')
-    setValue('dob', '2006-05-15')
-    setValue('mobile', '9876543210')
-    setValue('fatherFirstName', 'Rajesh')
-    setValue('fatherMiddleName', 'Prasad')
-    setValue('fatherLastName', 'Sharma')
-    setValue('motherFirstName', 'Sunita')
-    setValue('motherMiddleName', '')
-    setValue('motherLastName', 'Sharma')
-    setValue('state', 'West Bengal')
-    setValue('city', 'Kolkata')
-    setValue('pincode', '700001')
-    setValue('address', '12/A College Street, Near University Square')
-    setValue('password', 'student123')
-    setValue('confirmPassword', 'student123')
-    setGeneralError('')
-  }
-
   const onSubmit = async (data) => {
     setGeneralError('')
     try {
@@ -190,28 +167,18 @@ export function Register() {
   return (
     <div className="py-8 sm:py-12 md:py-16">
       <div className="container max-w-2xl mx-auto px-4">
-        {/* Header with Title & Demo Fill Action */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6 sm:mb-8">
-          <div>
-            <div className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full mb-2 border border-blue-100">
-              <span>📝</span>
-              <span>{t('auth.studentBadge')}</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
-              {t('auth.registerTitle')}
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-600 mt-1">
-              {t('auth.stepOf', { current: currentStep, total: 4 })}: {stepTitles[currentStep - 1].title}
-            </p>
+        {/* Header */}
+        <div className="mb-6 sm:mb-8 text-center sm:text-left">
+          <div className="inline-flex items-center gap-1.5 bg-blue-50 text-blue-700 text-xs font-semibold px-3 py-1 rounded-full mb-2 border border-blue-100">
+            <span>📝</span>
+            <span>{t('auth.studentBadge')}</span>
           </div>
-
-          <button
-            type="button"
-            onClick={fillSampleData}
-            className="self-start sm:self-auto text-xs font-semibold text-blue-700 bg-blue-50 hover:bg-blue-100/80 border border-blue-200 px-3 py-1.5 rounded-lg transition-colors cursor-pointer"
-          >
-            {t('auth.autoFillDemo')}
-          </button>
+          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            {t('auth.registerTitle')}
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-600 mt-1">
+            {t('auth.stepOf', { current: currentStep, total: 4 })}: {stepTitles[currentStep - 1].title}
+          </p>
         </div>
 
         {/* Psychological Stepper Progress Bar */}

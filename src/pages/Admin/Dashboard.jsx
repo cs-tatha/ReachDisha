@@ -50,7 +50,6 @@ export function AdminDashboard() {
     totalPages: 1,
     hasMore: false,
   })
-  const [isLoadingStudents, setIsLoadingStudents] = useState(false)
   const [isLoadingMore, setIsLoadingMore] = useState(false)
 
   const [questions, setQuestions] = useState(() => {

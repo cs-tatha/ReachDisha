@@ -16,7 +16,7 @@ import { notifyAssessmentUpdated } from '@/utils/assessmentProgress'
 const getProgressKey = (userId) => `ccc_assessment_progress_${userId || 'guest'}`
 
 export function Assessment() {
-  const { t, language, setLanguage } = useTranslation()
+  const { t, language } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
   const progressKey = getProgressKey(user?.id)

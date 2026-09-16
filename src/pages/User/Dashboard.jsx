@@ -422,9 +422,6 @@ export function Dashboard() {
     }
   }
 
-  // Report Card Notify State
-  const [reportNotified, setReportNotified] = useState(false)
-
   const initials = getInitials(user?.fullName)
 
   return (

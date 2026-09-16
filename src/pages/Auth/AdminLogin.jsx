@@ -43,12 +43,6 @@ export function AdminLogin() {
     }
   }
 
-  const fillDemoAdmin = () => {
-    setIdentifier('9876543210')
-    setPassword('admin123')
-    setError('')
-  }
-
   return (
     <div className="min-h-[calc(100vh-68px)] flex items-center justify-center py-10 sm:py-16 px-4 sm:px-6 lg:px-8 bg-slate-50/70 relative overflow-hidden">
       {/* Subtle Background Teal Ambience */}
@@ -185,7 +179,7 @@ export function AdminLogin() {
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="admin123"
+                  placeholder={t('auth.adminPasswordPlaceholder') || t('auth.passwordPlaceholder')}
                   required
                   autoComplete="current-password"
                   disabled={isLoading}
@@ -228,15 +222,6 @@ export function AdminLogin() {
                 )}
               </Button>
             </div>
-
-            {/* 1-Click Demo Fill Button */}
-            <button
-              type="button"
-              onClick={fillDemoAdmin}
-              className="w-full py-2.5 px-4 rounded-xl border border-dashed border-teal-300 bg-teal-50/40 hover:bg-teal-50 text-xs sm:text-sm font-bold text-teal-800 hover:text-teal-900 flex items-center justify-center gap-2 transition-all cursor-pointer select-none"
-            >
-              <span>{t('auth.demoAdminBtn')}</span>
-            </button>
           </form>
 
           {/* Return Link Section */}
