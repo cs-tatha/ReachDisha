@@ -40,16 +40,16 @@ export function BrandIcon({ className = 'w-9 h-9 sm:w-10 sm:h-10' }) {
 
 export function BrandLogo({ showTagline = true, className = '' }) {
   return (
-    <div className={`flex items-center gap-2.5 sm:gap-3 ${className}`}>
-      <BrandIcon />
-      <div className="flex flex-col justify-center">
+    <div className={`flex items-center gap-2 sm:gap-2.5 ${className}`}>
+      <BrandIcon className="w-8.5 h-8.5 sm:w-10 sm:h-10 shrink-0" />
+      <div className="flex flex-col justify-center min-w-0">
         <div className="flex items-center gap-1.5">
-          <span className="font-black text-base sm:text-lg lg:text-xl tracking-tight text-slate-900 leading-tight">
+          <span className="font-black text-base sm:text-lg lg:text-xl tracking-tight text-slate-900 leading-tight whitespace-nowrap">
             Reach <span className="text-blue-700">Disha</span>
           </span>
         </div>
         {showTagline && (
-          <span className="text-[9.5px] sm:text-[11px] text-slate-500 font-medium tracking-tight leading-none mt-0.5 whitespace-nowrap">
+          <span className="hidden sm:inline-block text-[9.5px] sm:text-[11px] text-slate-500 font-medium tracking-tight leading-none mt-0.5 whitespace-nowrap">
             powered by <strong className="text-slate-700 font-semibold">Reach India Pvt. Ltd.</strong>
           </span>
         )}

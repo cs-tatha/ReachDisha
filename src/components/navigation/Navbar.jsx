@@ -205,19 +205,20 @@ export function Navbar() {
             </div>
 
             {/* Mobile Top Controls: Language Selector + (Single Admin Login Button OR Profile Picture Icon & Name) (< 1024px) */}
-            <div className="flex items-center gap-2 sm:gap-2.5 lg:hidden">
+            <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 lg:hidden">
               <LanguageSelector id="mobile-quick-lang" />
 
-              <div className="h-6 w-px bg-slate-200" aria-hidden="true" />
+              <div className="h-5 sm:h-6 w-px bg-slate-200 shrink-0" aria-hidden="true" />
 
               {!isAuthenticated ? (
                 /* Single Admin Login Button when unauthenticated */
                 <Link
                   to={ROUTES.ADMIN_LOGIN}
-                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold text-teal-800 bg-teal-50 border border-teal-200/90 hover:bg-teal-100 shadow-2xs transition-all active:scale-95"
+                  className="inline-flex items-center justify-center gap-1.5 px-3 sm:px-3.5 h-9 sm:h-10 rounded-full text-xs sm:text-sm font-bold text-teal-800 hover:text-teal-950 bg-teal-50/90 hover:bg-teal-100 border border-teal-300/80 shadow-2xs transition-all active:scale-95 shrink-0 whitespace-nowrap"
                   aria-label={t('navigation.loginAdmin')}
+                  title={t('navigation.loginAdmin')}
                 >
-                  <span className="w-1.5 h-1.5 rounded-full bg-teal-600" aria-hidden="true" />
+                  <span className="w-1.5 h-1.5 sm:w-2 sm:h-2 rounded-full bg-teal-600 shrink-0" aria-hidden="true" />
                   <span>{t('navigation.admin')}</span>
                 </Link>
               ) : (
