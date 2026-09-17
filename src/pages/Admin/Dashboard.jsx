@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import LogoutConfirmModal from '@/components/common/LogoutConfirmModal'
 import Button from '@/components/ui/Button'
@@ -118,34 +118,25 @@ export function AdminDashboard() {
     }
   }
 
-  const fetchStudents = useCallback(async (page = 1, append = false) => {
-    try {
-      if (page === 1) setIsLoadingStudents(true)
-      else setIsLoadingMore(true)
-
-      const res = await authService.getPaginatedStudents({
-        page,
-        limit: 10,
-        search: studentSearch,
-      })
-
-      if (append) {
-        setStudents((prev) => [...prev, ...res.students])
-      } else {
-        setStudents(res.students)
+  useEffect(() => {
+    let active = true
+    authService.getPaginatedStudents({
+      page: 1,
+      limit: 10,
+      search: studentSearch,
+    }).then((res) => {
+      if (active && res) {
+        setStudents(res.students || [])
+        if (res.pagination) setStudentPagination(res.pagination)
       }
-      setStudentPagination(res.pagination)
-    } catch (err) {
+    }).catch((err) => {
       console.error('Failed to load students:', err)
-    } finally {
-      setIsLoadingStudents(false)
-      setIsLoadingMore(false)
+    })
+
+    return () => {
+      active = false
     }
   }, [studentSearch])
-
-  useEffect(() => {
-    fetchStudents(1, false)
-  }, [fetchStudents])
 
   useEffect(() => {
     questionService.fetchAssessmentQuestions().then((qs) => {
@@ -153,9 +144,26 @@ export function AdminDashboard() {
     }).catch(() => {})
   }, [])
 
-  const handleLoadMoreStudents = () => {
+  const handleLoadMoreStudents = async () => {
     if (studentPagination.hasMore && !isLoadingMore) {
-      fetchStudents(studentPagination.page + 1, true)
+      try {
+        setIsLoadingMore(true)
+        const res = await authService.getPaginatedStudents({
+          page: studentPagination.page + 1,
+          limit: 10,
+          search: studentSearch,
+        })
+        if (res?.students) {
+          setStudents((prev) => [...prev, ...res.students])
+        }
+        if (res?.pagination) {
+          setStudentPagination(res.pagination)
+        }
+      } catch (err) {
+        console.error('Failed to load more students:', err)
+      } finally {
+        setIsLoadingMore(false)
+      }
     }
   }
 
