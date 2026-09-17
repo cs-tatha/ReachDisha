@@ -8,7 +8,7 @@
 const getApiBaseUrl = () => {
   if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL
   if (import.meta.env.PROD) {
-    return '/api'
+    return 'https://reachdisha-production.up.railway.app/api'
   }
   if (typeof window !== 'undefined' && window.location && window.location.hostname) {
     return `http://${window.location.hostname}:3000/api`
