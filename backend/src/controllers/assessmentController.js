@@ -187,21 +187,36 @@ class AssessmentController {
         where: { userId: targetUserId },
       });
 
-      // Clear in-progress assessment tracking on the student user record
+      // Increment retakeCount and initialize fresh assessment progress
       const existingUser = await prisma.user.findUnique({
         where: { userId: targetUserId },
-        select: { id: true },
+        select: { id: true, retakeCount: true },
       });
 
+      let updatedRetakeCount = 1;
       if (existingUser) {
+        updatedRetakeCount = (existingUser.retakeCount || 0) + 1;
         await prisma.user.update({
           where: { userId: targetUserId },
-          data: { assessmentProgress: null },
+          data: {
+            retakeCount: updatedRetakeCount,
+            assessmentProgress: {
+              isStarted: true,
+              isCompleted: false,
+              currentIndex: 0,
+              answers: {},
+              answeredCount: 0,
+              totalQuestions: 66,
+              retakeCount: updatedRetakeCount,
+              updatedAt: new Date().toISOString(),
+            },
+          },
         });
       }
 
       return sendSuccess(res, 200, 'Assessment data successfully reset.', {
         userId: targetUserId,
+        retakeCount: updatedRetakeCount,
         reset: true,
       });
     } catch (error) {

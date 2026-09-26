@@ -32,6 +32,7 @@ model User {
   createdAt          DateTime           @default(now()) @map("created_at")
   updatedAt          DateTime           @updatedAt @map("updated_at")
   assessmentProgress Json?              @map("assessment_progress")
+  retakeCount        Int                @default(0) @map("retake_count")
   assessmentResults  AssessmentResult[]
 
   @@map("users")

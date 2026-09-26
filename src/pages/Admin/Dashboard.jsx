@@ -118,23 +118,41 @@ export function AdminDashboard() {
     }
   }
 
-  useEffect(() => {
-    let active = true
-    authService.getPaginatedStudents({
-      page: 1,
-      limit: 10,
-      search: studentSearch,
-    }).then((res) => {
-      if (active && res) {
-        setStudents(res.students || [])
+  const [isRefreshingStudents, setIsRefreshingStudents] = useState(false)
+
+  const fetchStudents = async (showLoading = false) => {
+    if (showLoading) setIsRefreshingStudents(true)
+    try {
+      const res = await authService.getPaginatedStudents({
+        page: 1,
+        limit: Math.max(10, students.length || 10),
+        search: studentSearch,
+      })
+      if (res?.students) {
+        setStudents(res.students)
         if (res.pagination) setStudentPagination(res.pagination)
       }
-    }).catch((err) => {
+    } catch (err) {
       console.error('Failed to load students:', err)
-    })
+    } finally {
+      if (showLoading) setIsRefreshingStudents(false)
+    }
+  }
 
+  useEffect(() => {
+    fetchStudents()
+  }, [studentSearch])
+
+  // Live synchronizer: immediately re-fetch student roster when assessment state changes (e.g. retake or submission)
+  useEffect(() => {
+    const handleAssessmentUpdated = () => {
+      fetchStudents()
+    }
+    window.addEventListener('ccc_assessment_updated', handleAssessmentUpdated)
+    window.addEventListener('storage', handleAssessmentUpdated)
     return () => {
-      active = false
+      window.removeEventListener('ccc_assessment_updated', handleAssessmentUpdated)
+      window.removeEventListener('storage', handleAssessmentUpdated)
     }
   }, [studentSearch])
 
@@ -184,6 +202,8 @@ export function AdminDashboard() {
         return s.assessment?.answeredCount > 0 && !s.assessment?.isCompleted
       if (studentStatusFilter === 'registered')
         return !s.assessment?.answeredCount || s.assessment?.answeredCount === 0
+      if (studentStatusFilter === 'retaken')
+        return (s.retakeCount || 0) > 0
 
       return true
     })
@@ -704,6 +724,27 @@ export function AdminDashboard() {
                 >
                   📝 {t('dashboard.admin.statusRegistered')} ({students.filter((s) => !s.assessment?.answeredCount || s.assessment?.answeredCount === 0).length})
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setStudentStatusFilter('retaken')}
+                  className={`px-3 py-1 rounded-full text-xs font-bold cursor-pointer whitespace-nowrap shrink-0 transition-all ${
+                    studentStatusFilter === 'retaken'
+                      ? 'bg-purple-700 text-white shadow-2xs'
+                      : 'bg-purple-50 text-purple-700 hover:bg-purple-100'
+                  }`}
+                >
+                  🔄 Retakes ({students.filter((s) => (s.retakeCount || 0) > 0).length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => fetchStudents(true)}
+                  disabled={isRefreshingStudents}
+                  className="px-3 py-1 rounded-full text-xs font-bold border border-slate-200 bg-white hover:bg-slate-100 active:bg-slate-200 text-slate-700 transition-all flex items-center gap-1 cursor-pointer shrink-0 ml-auto shadow-2xs"
+                  title="Refresh student assessment roster"
+                >
+                  <span className={isRefreshingStudents ? 'animate-spin' : ''}>🔄</span>
+                  <span>{isRefreshingStudents ? 'Refreshing...' : 'Refresh'}</span>
+                </button>
               </div>
             </div>
 
@@ -755,18 +796,26 @@ export function AdminDashboard() {
                           </div>
                         </div>
 
-                        <span
-                          className={`text-[10px] font-bold px-2.5 py-1 rounded-full shrink-0 flex items-center gap-1 ${
-                            isComp
-                              ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
-                              : answered > 0
-                              ? 'bg-amber-100 text-amber-900 border border-amber-300'
-                              : 'bg-slate-100 text-slate-700 border border-slate-200'
-                          }`}
-                        >
-                          {isComp && <span>✓</span>}
-                          <span>{s.assessment?.status || 'Not Started'}</span>
-                        </span>
+                        <div className="flex flex-col items-end gap-1 shrink-0">
+                          <span
+                            className={`text-[10px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1 ${
+                              isComp
+                                ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                                : answered > 0
+                                ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                                : 'bg-slate-100 text-slate-700 border border-slate-200'
+                            }`}
+                          >
+                            {isComp && <span>✓</span>}
+                            <span>{s.assessment?.status || 'Not Started'}</span>
+                          </span>
+                          {(s.retakeCount || 0) > 0 && (
+                            <span className="text-[10px] font-extrabold px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 border border-purple-200 flex items-center gap-0.5 shadow-2xs">
+                              <span>🔄</span>
+                              <span>Retake #{s.retakeCount}</span>
+                            </span>
+                          )}
+                        </div>
                       </div>
 
                       {/* Middle Row: Phone with Click-to-Call & Location */}
@@ -899,7 +948,7 @@ export function AdminDashboard() {
                         </td>
 
                         <td className="py-3.5 px-4">
-                          <div className="flex items-center gap-2 mb-1">
+                          <div className="flex items-center gap-2 mb-1 flex-wrap">
                             <span
                               className={`text-[11px] font-bold px-2 py-0.5 rounded-full ${
                                 s.assessment?.isCompleted
@@ -911,13 +960,21 @@ export function AdminDashboard() {
                             >
                               {s.assessment?.status}
                             </span>
+                            {(s.retakeCount || 0) > 0 && (
+                              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-extrabold bg-purple-50 text-purple-700 border border-purple-200">
+                                <span>🔄</span>
+                                <span>Retake #{s.retakeCount}</span>
+                              </span>
+                            )}
                             <span className="text-slate-500 text-xs font-mono">
                               {s.assessment?.answeredCount} / {s.assessment?.totalQuestions} Qs
                             </span>
                           </div>
                           <div className="w-28 h-1.5 bg-slate-100 rounded-full overflow-hidden border border-slate-200">
                             <div
-                              className="h-full bg-blue-600 rounded-full"
+                              className={`h-full rounded-full transition-all duration-300 ${
+                                s.assessment?.isCompleted ? 'bg-emerald-500' : 'bg-blue-600'
+                              }`}
                               style={{ width: `${s.assessment?.percentage || 0}%` }}
                             />
                           </div>
@@ -1523,17 +1580,24 @@ export function AdminDashboard() {
                     <h3 className="font-bold text-slate-900 text-sm">
                       Phase 2: Psychometric Assessment
                     </h3>
-                    <span
-                      className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${
-                        selectedStudentForTimeline.assessment?.isCompleted
-                          ? 'bg-emerald-100 text-emerald-800'
-                          : selectedStudentForTimeline.assessment?.answeredCount > 0
-                          ? 'bg-amber-100 text-amber-800'
-                          : 'bg-slate-200 text-slate-700'
-                      }`}
-                    >
-                      {selectedStudentForTimeline.assessment?.status}
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      {(selectedStudentForTimeline.retakeCount || 0) > 0 && (
+                        <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-purple-100 text-purple-800 border border-purple-200">
+                          🔄 Retake #{selectedStudentForTimeline.retakeCount}
+                        </span>
+                      )}
+                      <span
+                        className={`text-[11px] font-bold px-2 py-0.5 rounded-md ${
+                          selectedStudentForTimeline.assessment?.isCompleted
+                            ? 'bg-emerald-100 text-emerald-800'
+                            : selectedStudentForTimeline.assessment?.answeredCount > 0
+                            ? 'bg-amber-100 text-amber-800'
+                            : 'bg-slate-200 text-slate-700'
+                        }`}
+                      >
+                        {selectedStudentForTimeline.assessment?.status}
+                      </span>
+                    </div>
                   </div>
 
                   <div>
@@ -1720,7 +1784,7 @@ export function AdminDashboard() {
               ) : (
                 <>
                   {/* Candidate Quick Overview Banner */}
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs">
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 p-4 bg-slate-50 border border-slate-200 rounded-2xl text-xs">
                     <div>
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Candidate Mobile</span>
                       <a href={`tel:${selectedStudentForReport.phone || selectedStudentForReport.mobile}`} className="font-bold text-blue-700 hover:underline">
@@ -1737,6 +1801,18 @@ export function AdminDashboard() {
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Location</span>
                       <span className="font-bold text-slate-800 truncate block">
                         {[selectedStudentForReport.city, selectedStudentForReport.state].filter(Boolean).join(', ') || 'N/A'}
+                      </span>
+                    </div>
+                    <div>
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Retakes</span>
+                      <span className="font-bold text-slate-800 block">
+                        {(selectedStudentForReport.retakeCount || 0) > 0 ? (
+                          <span className="inline-flex items-center gap-1 text-purple-700 bg-purple-50 px-2 py-0.5 rounded text-xs border border-purple-200 font-extrabold">
+                            🔄 Retake #{selectedStudentForReport.retakeCount}
+                          </span>
+                        ) : (
+                          '0 (Initial Test)'
+                        )}
                       </span>
                     </div>
                     <div>

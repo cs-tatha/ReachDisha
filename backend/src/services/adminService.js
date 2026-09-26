@@ -58,6 +58,7 @@ class AdminService {
           avatar: true,
           createdAt: true,
           assessmentProgress: true,
+          retakeCount: true,
           assessmentResults: {
             orderBy: { createdAt: 'desc' },
             take: 1,
@@ -89,16 +90,19 @@ class AdminService {
 
       const resultAnswersCount = Object.keys(resultAnswersMap).length;
       const progressAnswersCount = Object.keys(progressAnswersMap).length || progress?.answeredCount || 0;
-      const rawCount = Math.max(resultAnswersCount, progressAnswersCount);
 
-      const isCompleted = Boolean(
-        (latestResult && resultAnswersCount > 0) ||
+      // Active retake or active in-progress state:
+      // When a student clicks retake, progress.isStarted is true and isCompleted is false.
+      const isActivelyRetaking = Boolean(progress?.isStarted && !progress?.isCompleted);
+
+      // Student is only considered completed if NOT actively retaking and either has progress.isCompleted or valid result
+      const isCompleted = isActivelyRetaking ? false : Boolean(
         progress?.isCompleted ||
-        rawCount >= 45
+        (latestResult && resultAnswersCount > 0)
       );
 
-      const totalQuestions = progress?.totalQuestions || 45;
-      const answeredCount = isCompleted ? totalQuestions : rawCount;
+      const totalQuestions = progress?.totalQuestions || 66;
+      const answeredCount = isCompleted ? totalQuestions : (isActivelyRetaking ? progressAnswersCount : (progressAnswersCount || resultAnswersCount));
       const percentage = isCompleted ? 100 : Math.min(100, Math.round((answeredCount / totalQuestions) * 100));
       const status = isCompleted ? 'Completed' : (answeredCount > 0 ? 'In Progress' : 'Not Started');
 
@@ -107,6 +111,7 @@ class AdminService {
         id: s.userId || `u-student-${s.id}`,
         dbId: s.id,
         mobile: s.phone,
+        retakeCount: s.retakeCount || progress?.retakeCount || 0,
         assessment: {
           isCompleted,
           status,
@@ -114,13 +119,13 @@ class AdminService {
           totalQuestions,
           leftCount: Math.max(0, totalQuestions - answeredCount),
           percentage,
-          answers: Object.keys(resultAnswersMap).length > 0 ? resultAnswersMap : progressAnswersMap,
-          evaluatedAt: latestResult?.createdAt || progress?.updatedAt || null,
+          answers: isActivelyRetaking ? progressAnswersMap : (Object.keys(resultAnswersMap).length > 0 ? resultAnswersMap : progressAnswersMap),
+          evaluatedAt: isActivelyRetaking ? (progress?.updatedAt || null) : (latestResult?.createdAt || progress?.updatedAt || null),
         },
-        assessmentResult: latestResult ? {
+        assessmentResult: isActivelyRetaking ? null : (latestResult ? {
           ...latestResult,
           evaluatedAt: latestResult.createdAt,
-        } : null,
+        } : null),
       };
     });
 
@@ -170,6 +175,7 @@ class AdminService {
         address: true,
         createdAt: true,
         assessmentProgress: true,
+        retakeCount: true,
         assessmentResults: {
           orderBy: { createdAt: 'desc' },
           take: 1,
@@ -199,6 +205,7 @@ class AdminService {
         pincode: student.pincode,
         address: student.address,
         createdAt: student.createdAt,
+        retakeCount: student.retakeCount || 0,
       },
       report: latest ? {
         ...latest,

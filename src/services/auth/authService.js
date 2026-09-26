@@ -276,11 +276,12 @@ export const authService = {
 
     // Enrich with database assessment progress or fallback to localStorage
     const students = rawStudents.map((student) => {
+      const isDatabaseManaged = Boolean(student.assessment !== undefined && student.assessment !== null)
       let assessment = student.assessment || null
       let recommendation = student.assessmentResult || null
 
-      // Check localStorage fallbacks only if not completed in database
-      if (!assessment?.isCompleted && !recommendation) {
+      // Check localStorage fallbacks only if student has no database assessment state
+      if (!isDatabaseManaged && !recommendation) {
         const lookupKeys = [student.userId, student.id, student.phone, student.mobile].filter(Boolean)
         for (const key of lookupKeys) {
           try {
@@ -292,7 +293,7 @@ export const authService = {
                   ...assessment,
                   ...parsed,
                   answeredCount: parsed.isCompleted
-                    ? 45
+                    ? (parsed.totalQuestions || 66)
                     : (parsed.answeredCount || Object.keys(parsed.answers || {}).length || assessment?.answeredCount || 0),
                   isCompleted: Boolean(parsed.isCompleted || assessment?.isCompleted),
                 }
@@ -317,15 +318,14 @@ export const authService = {
         }
       }
 
-      const totalQuestions = assessment?.totalQuestions || 45
+      const totalQuestions = assessment?.totalQuestions || 66
       const answersMap = (assessment?.answers && typeof assessment.answers === 'object') ? assessment.answers : {}
       const fallbackCount = Object.keys(answersMap).length
       const answeredCount = assessment?.answeredCount ?? fallbackCount
 
       const isCompleted = Boolean(
         assessment?.isCompleted ||
-        recommendation ||
-        (answeredCount >= totalQuestions && totalQuestions > 0)
+        (!isDatabaseManaged && (recommendation || (answeredCount >= totalQuestions && totalQuestions > 0)))
       )
 
       let status = assessment?.status || 'Not Started'
@@ -341,6 +341,7 @@ export const authService = {
 
       return {
         ...student,
+        retakeCount: student.retakeCount ?? assessment?.retakeCount ?? 0,
         assessment: {
           answeredCount: isCompleted ? totalQuestions : answeredCount,
           totalQuestions,
@@ -351,7 +352,7 @@ export const authService = {
           answers: answersMap,
           updatedAt: recommendation?.evaluatedAt || assessment?.updatedAt || student.createdAt || null,
         },
-        assessmentResult: recommendation || student.assessmentResult || null,
+        assessmentResult: isCompleted ? (recommendation || student.assessmentResult || null) : null,
       }
     })
 
