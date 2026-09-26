@@ -1,7 +1,7 @@
 /**
  * BrandLogo & BrandIcon Component
  * 
- * "Reach Disha" Brand Identity:
+ * "Reach E-Disha" Brand Identity:
  * - Rich gradient squircle background (Blue to Indigo)
  * - Full-height perspective vertical road in crisp white
  * - True-perspective dashed lane markings leading straight forward
@@ -45,12 +45,12 @@ export function BrandLogo({ showTagline = true, className = '' }) {
       <div className="flex flex-col justify-center min-w-0">
         <div className="flex items-center gap-1.5">
           <span className="font-black text-base sm:text-lg lg:text-xl tracking-tight text-slate-900 leading-tight whitespace-nowrap">
-            Reach <span className="text-blue-700">Disha</span>
+            Reach <span className="text-blue-700">E-Disha</span>
           </span>
         </div>
         {showTagline && (
-          <span className="hidden sm:inline-block text-[9.5px] sm:text-[11px] text-slate-500 font-medium tracking-tight leading-none mt-0.5 whitespace-nowrap">
-            powered by <strong className="text-slate-700 font-semibold">Reach India Pvt. Ltd.</strong>
+          <span className="block text-[8.5px] xs:text-[9.5px] sm:text-[11px] text-slate-500 font-medium tracking-tight leading-none mt-0.5 whitespace-nowrap">
+            powered by <strong className="text-slate-700 font-semibold">Reach India Trust</strong>
           </span>
         )}
       </div>

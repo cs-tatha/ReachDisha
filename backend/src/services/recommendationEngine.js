@@ -1,7 +1,7 @@
 /**
  * Career Recommendation Engine (Multidimensional Scoring & Vocational Curriculum Matching)
  * 
- * Calibrated exclusively to ReachDisha / CCC's 11 Official Vocational Training Sectors,
+ * Calibrated exclusively to Reach E-Disha / CCC's 11 Official Vocational Training Sectors,
  * Course Programs, and Mapped Job Roles.
  * 
  * Algorithm:

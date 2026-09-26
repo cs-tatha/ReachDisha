@@ -1161,7 +1161,7 @@ export function Dashboard() {
                           🎓 Mapped Vocational Training Courses & Job Roles
                         </h3>
                         <p className="text-xs text-slate-500">
-                          ReachDisha & CCC standardized vocational courses and mapped industry entry-level job roles aligned to your profile.
+                          Reach E-Disha & CCC standardized vocational courses and mapped industry entry-level job roles aligned to your profile.
                         </p>
                       </div>
 
@@ -1474,10 +1474,10 @@ export function Dashboard() {
                         <div>
                           <span className="text-slate-500 font-medium block text-xs">{t('dashboard.student.counselingEmail')}</span>
                           <a
-                            href="mailto:support@reachdisha.org"
+                            href="mailto:support@reachedisha.org"
                             className="font-bold text-blue-700 hover:underline text-sm break-all"
                           >
-                            support@reachdisha.org
+                            support@reachedisha.org
                           </a>
                         </div>
                       </div>

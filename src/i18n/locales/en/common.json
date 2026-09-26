@@ -1,7 +1,7 @@
 {
-  "appName": "Reach Disha",
-  "companyName": "Reach India Pvt. Ltd.",
-  "poweredBy": "Powered by Reach India Pvt. Ltd.",
+  "appName": "Reach E-Disha",
+  "companyName": "Reach India Trust",
+  "poweredBy": "powered by Reach India Trust",
   "startAssessment": "Start Assessment",
   "continueAssessment": "Continue Assessment",
   "nextQuestion": "Next Question",
@@ -26,7 +26,7 @@
   "notFoundTitle": "Page Not Found",
   "notFoundDesc": "We could not find the page you were looking for. Please return to the homepage to continue.",
   "footer": {
-    "rights": "© {{year}} Reach Disha. Powered by Reach India Pvt. Ltd. All rights reserved.",
+    "rights": "© {{year}} Reach E-Disha. Powered by Reach India Trust. All rights reserved.",
     "accessibleDesign": "Accessible Design",
     "mobileFirst": "Mobile-First",
     "multiLanguage": "Multi-Language"

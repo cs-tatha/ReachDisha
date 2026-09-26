@@ -1,5 +1,5 @@
 /**
- * ReachDisha Psychometric Assessment - 45 Questions Comprehensive Multilingual Translations
+ * Reach E-Disha Psychometric Assessment - 45 Questions Comprehensive Multilingual Translations
  * Languages: English ('en'), Hindi ('hi'), Bengali ('bn')
  * Complete mapping for categories, questions, and options a-e.
  */

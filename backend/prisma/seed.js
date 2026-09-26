@@ -15,7 +15,7 @@ async function main() {
     update: { password: adminPasswordHash, role: 'admin' },
     create: {
       userId: 'u-admin-1',
-      fullName: 'Head Administrator (ReachDisha)',
+      fullName: 'Head Administrator (Reach E-Disha)',
       phone: '9876543210',
       password: adminPasswordHash,
       role: 'admin',

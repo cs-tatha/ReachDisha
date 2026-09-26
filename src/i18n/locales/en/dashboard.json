@@ -1,7 +1,7 @@
 {
   "student": {
     "welcome": "Welcome back, {{name}}!",
-    "subtitle": "Track your assessment progress, explore recommended careers, and connect with Reach Disha advisors.",
+    "subtitle": "Track your assessment progress, explore recommended careers, and connect with Reach E-Disha advisors.",
     "badge": "Student Profile",
     "verified": "Verified",
     "regId": "Registration ID:",
@@ -112,7 +112,7 @@
   "admin": {
     "staffControl": "Staff Control Center",
     "administrator": "Administrator",
-    "title": "Reach Disha Administrator Control Panel",
+    "title": "Reach E-Disha Administrator Control Panel",
     "subtitle": "Manage registered students, question bank, testimonials, partners, and student support queries.",
     "registeredStudents": "Registered Students",
     "activeAccounts": "Active student accounts",

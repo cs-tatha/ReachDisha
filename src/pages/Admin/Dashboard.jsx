@@ -1846,7 +1846,7 @@ export function AdminDashboard() {
                     <div className="flex items-center justify-between mb-3">
                       <div>
                         <div className="text-[11px] font-black uppercase tracking-wider text-blue-700">
-                          ReachDisha &amp; CCC Vocational Standard
+                          Reach E-Disha &amp; CCC Vocational Standard
                         </div>
                         <h3 className="text-base sm:text-lg font-black text-slate-900">
                           🎯 Top 3 Recommended Vocational Skill Domains
@@ -2079,7 +2079,7 @@ export function AdminDashboard() {
             {/* Modal Footer */}
             <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between shrink-0">
               <span className="text-xs text-slate-500">
-                ReachDisha Assessment Intelligence &bull; Official Curriculum
+                Reach E-Disha Assessment Intelligence &bull; Official Curriculum
               </span>
               <div className="flex items-center gap-2">
                 <Button

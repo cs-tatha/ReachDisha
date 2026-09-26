@@ -294,7 +294,7 @@ export function Login() {
             </div>
             <div className="flex flex-col items-center gap-1">
               <span>🏛️</span>
-              <span className="font-semibold text-slate-700">Reach India Pvt. Ltd.</span>
+              <span className="font-semibold text-slate-700">Reach India Trust</span>
             </div>
           </div>
 
