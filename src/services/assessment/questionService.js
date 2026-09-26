@@ -175,10 +175,12 @@ export const questionService = {
    * Submits candidate answers to the Backend Career Recommendation Engine
    * Evaluates Top 3 Skill Domains, Strengths, Skill Gaps, and Career Recommendations
    * @param {Record<string, string>} answers
+   * @param {string} [candidateUserId]
    */
-  async submitAssessment(answers) {
+  async submitAssessment(answers, candidateUserId = null) {
     const session = authService.getCurrentSession()
     const token = session?.accessToken || session?.token
+    const targetUserId = candidateUserId || session?.user?.userId || session?.user?.id
 
     const response = await fetch(`${API_BASE_URL}/assessment/submit`, {
       method: 'POST',
@@ -186,7 +188,10 @@ export const questionService = {
         'Content-Type': 'application/json',
         ...(token ? { Authorization: `Bearer ${token}` } : {}),
       },
-      body: JSON.stringify({ answers }),
+      body: JSON.stringify({
+        answers,
+        userId: targetUserId,
+      }),
     })
 
     const res = await response.json()
@@ -195,6 +200,68 @@ export const questionService = {
     }
 
     return res.data
+  },
+
+  /**
+   * Saves candidate's live assessment progression to MySQL
+   * @param {Object} progressData
+   */
+  async saveProgress(progressData) {
+    try {
+      const session = authService.getCurrentSession()
+      const token = session?.accessToken || session?.token
+      const targetUserId = progressData.userId || session?.user?.userId || session?.user?.id
+
+      if (!token && !targetUserId) return null
+
+      const response = await fetch(`${API_BASE_URL}/assessment/progress`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          ...progressData,
+          userId: targetUserId,
+        }),
+      })
+
+      if (!response.ok) return null
+      const res = await response.json()
+      return res.data
+    } catch (err) {
+      console.warn('[QuestionService] Live progress sync error:', err.message)
+      return null
+    }
+  },
+
+  /**
+   * Retrieves saved progress from MySQL for candidate
+   * @param {string} [candidateUserId]
+   */
+  async getSavedProgress(candidateUserId = null) {
+    try {
+      const session = authService.getCurrentSession()
+      const token = session?.accessToken || session?.token
+      const targetUserId = candidateUserId || session?.user?.userId || session?.user?.id
+
+      if (!token && !targetUserId) return null
+
+      const response = await fetch(
+        `${API_BASE_URL}/assessment/progress?userId=${encodeURIComponent(targetUserId || '')}`,
+        {
+          headers: {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          },
+        }
+      )
+
+      if (!response.ok) return null
+      const res = await response.json()
+      return res.data
+    } catch {
+      return null
+    }
   },
 
   /**

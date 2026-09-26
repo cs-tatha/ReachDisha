@@ -276,56 +276,79 @@ export const authService = {
 
     // Enrich with database assessment progress or fallback to localStorage
     const students = rawStudents.map((student) => {
-      if (student.assessment && student.assessmentResult) {
-        return student
-      }
-
       let assessment = student.assessment || null
-      if (!assessment) {
-        try {
-          const raw = localStorage.getItem(`ccc_assessment_progress_${student.id}`)
-          if (raw) {
-            assessment = JSON.parse(raw)
-          }
-        } catch {
-          // Ignore
-        }
-      }
-
       let recommendation = student.assessmentResult || null
-      if (!recommendation) {
-        try {
-          const recRaw = localStorage.getItem(`ccc_recommendation_${student.id}`)
-          if (recRaw) {
-            recommendation = JSON.parse(recRaw)
+
+      // Check localStorage fallbacks only if not completed in database
+      if (!assessment?.isCompleted && !recommendation) {
+        const lookupKeys = [student.userId, student.id, student.phone, student.mobile].filter(Boolean)
+        for (const key of lookupKeys) {
+          try {
+            const raw = localStorage.getItem(`ccc_assessment_progress_${key}`)
+            if (raw) {
+              const parsed = JSON.parse(raw)
+              if (parsed && (parsed.answers || parsed.isCompleted)) {
+                assessment = {
+                  ...assessment,
+                  ...parsed,
+                  answeredCount: parsed.isCompleted
+                    ? 45
+                    : (parsed.answeredCount || Object.keys(parsed.answers || {}).length || assessment?.answeredCount || 0),
+                  isCompleted: Boolean(parsed.isCompleted || assessment?.isCompleted),
+                }
+                break
+              }
+            }
+          } catch {
+            // Ignore
           }
-        } catch {
-          // Ignore
+        }
+
+        for (const key of lookupKeys) {
+          try {
+            const recRaw = localStorage.getItem(`ccc_recommendation_${key}`)
+            if (recRaw) {
+              recommendation = JSON.parse(recRaw)
+              break
+            }
+          } catch {
+            // Ignore
+          }
         }
       }
 
-      const answeredCount = Object.keys(assessment?.answers || {}).length
       const totalQuestions = assessment?.totalQuestions || 45
+      const answersMap = (assessment?.answers && typeof assessment.answers === 'object') ? assessment.answers : {}
+      const fallbackCount = Object.keys(answersMap).length
+      const answeredCount = assessment?.answeredCount ?? fallbackCount
+
       const isCompleted = Boolean(
-        student.assessment?.isCompleted || recommendation || assessment?.isCompleted || (answeredCount >= totalQuestions && totalQuestions > 0)
+        assessment?.isCompleted ||
+        recommendation ||
+        (answeredCount >= totalQuestions && totalQuestions > 0)
       )
 
-      let status = 'Not Started'
+      let status = assessment?.status || 'Not Started'
       if (isCompleted) {
         status = 'Completed'
       } else if (answeredCount > 0) {
         status = 'In Progress'
       }
 
+      const percentage = isCompleted
+        ? 100
+        : (assessment?.percentage ?? Math.min(100, Math.round((answeredCount / totalQuestions) * 100)))
+
       return {
         ...student,
         assessment: {
-          answeredCount: isCompleted ? 45 : answeredCount,
-          totalQuestions: 45,
-          leftCount: Math.max(0, 45 - (isCompleted ? 45 : answeredCount)),
-          percentage: isCompleted ? 100 : Math.round((answeredCount / 45) * 100),
+          answeredCount: isCompleted ? totalQuestions : answeredCount,
+          totalQuestions,
+          leftCount: Math.max(0, totalQuestions - (isCompleted ? totalQuestions : answeredCount)),
+          percentage,
           isCompleted,
           status,
+          answers: answersMap,
           updatedAt: recommendation?.evaluatedAt || assessment?.updatedAt || student.createdAt || null,
         },
         assessmentResult: recommendation || student.assessmentResult || null,

@@ -97,6 +97,32 @@ export function Assessment() {
   // Subtle section transition toast
   const [sectionNotice, setSectionNotice] = useState(null)
 
+  // Restore server-saved assessment progress if returning on new device / fresh session
+  useEffect(() => {
+    let isMounted = true
+    const studentId = user?.userId || user?.id
+    if (!studentId) return
+
+    // If local state already has answers, do not override
+    if (savedState?.answers && Object.keys(savedState.answers).length > 0) return
+
+    questionService.getSavedProgress(studentId).then((serverProgress) => {
+      if (!isMounted || !serverProgress) return
+      if (serverProgress.answers && Object.keys(serverProgress.answers).length > 0) {
+        setAnswers(serverProgress.answers)
+        if (serverProgress.currentIndex !== undefined) {
+          setCurrentIndex(serverProgress.currentIndex)
+        }
+        if (serverProgress.skippedIds) setSkippedIds(serverProgress.skippedIds)
+        if (serverProgress.markedIds) setMarkedIds(serverProgress.markedIds)
+        if (serverProgress.isStarted) setIsStarted(true)
+        if (serverProgress.isCompleted) setIsCompleted(true)
+      }
+    }).catch(() => {})
+
+    return () => { isMounted = false }
+  }, [user?.userId, user?.id, savedState])
+
   // ---------------------------------------------------------------------------
   // 2. Sections Computation with Dynamic Variable Question Counts
   // ---------------------------------------------------------------------------
@@ -167,26 +193,35 @@ export function Assessment() {
   // ---------------------------------------------------------------------------
   useEffect(() => {
     if (!isStarted || questions.length === 0) return
+    const currentProgress = {
+      currentIndex,
+      answers,
+      skippedIds,
+      markedIds,
+      isStarted,
+      isCompleted,
+      questions,
+      totalQuestions: questions.length,
+      userId: user?.userId || user?.id,
+      updatedAt: new Date().toISOString(),
+    }
+
     try {
-      localStorage.setItem(
-        progressKey,
-        JSON.stringify({
-          currentIndex,
-          answers,
-          skippedIds,
-          markedIds,
-          isStarted,
-          isCompleted,
-          questions,
-          totalQuestions: questions.length,
-          updatedAt: new Date().toISOString(),
-        })
-      )
+      localStorage.setItem(progressKey, JSON.stringify(currentProgress))
       notifyAssessmentUpdated()
     } catch {
       // Ignore storage quota limits
     }
-  }, [progressKey, currentIndex, answers, skippedIds, markedIds, isStarted, isCompleted, questions])
+
+    // Debounced database synchronization
+    const timer = setTimeout(() => {
+      if (Object.keys(answers).length > 0) {
+        questionService.saveProgress(currentProgress)
+      }
+    }, 1500)
+
+    return () => clearTimeout(timer)
+  }, [progressKey, currentIndex, answers, skippedIds, markedIds, isStarted, isCompleted, questions, user])
 
   // Scroll active tab into view
   useEffect(() => {
@@ -318,11 +353,36 @@ export function Assessment() {
     setIsCompleted(true)
     setShowReviewModal(false)
     window.scrollTo({ top: 0, behavior: 'smooth' })
+    const candidateUserId = user?.userId || user?.id
+
+    const finalProgress = {
+      currentIndex,
+      answers,
+      skippedIds,
+      markedIds,
+      isStarted: true,
+      isCompleted: true,
+      questions,
+      totalQuestions: questions.length || 45,
+      userId: candidateUserId,
+      updatedAt: new Date().toISOString(),
+    }
+
     try {
-      const evaluation = await questionService.submitAssessment(answers)
-      localStorage.setItem(`ccc_recommendation_${user?.id || 'guest'}`, JSON.stringify(evaluation))
+      localStorage.setItem(progressKey, JSON.stringify(finalProgress))
+    } catch {
+      // Ignore
+    }
+
+    try {
+      const evaluation = await questionService.submitAssessment(answers, candidateUserId)
+      if (evaluation) {
+        localStorage.setItem(`ccc_recommendation_${candidateUserId || 'guest'}`, JSON.stringify(evaluation))
+      }
     } catch (err) {
       console.error('Failed to submit assessment evaluation:', err)
+      // Safety net: ensure database records completed progress even if recommendation call had an issue
+      questionService.saveProgress(finalProgress)
     }
     notifyAssessmentUpdated()
   }

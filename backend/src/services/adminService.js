@@ -57,6 +57,7 @@ class AdminService {
           role: true,
           avatar: true,
           createdAt: true,
+          assessmentProgress: true,
           assessmentResults: {
             orderBy: { createdAt: 'desc' },
             take: 1,
@@ -81,10 +82,25 @@ class AdminService {
     // Map to student format expected by frontend
     const formatted = students.map((s) => {
       const latestResult = s.assessmentResults && s.assessmentResults[0] ? s.assessmentResults[0] : null;
-      const answersMap = latestResult?.answers || {};
-      const rawCount = Object.keys(answersMap).length;
-      const isCompleted = Boolean(latestResult && rawCount > 0);
-      const answeredCount = isCompleted ? Math.max(rawCount, 45) : rawCount;
+      const progress = s.assessmentProgress || null;
+
+      const resultAnswersMap = (latestResult?.answers && typeof latestResult.answers === 'object') ? latestResult.answers : {};
+      const progressAnswersMap = (progress?.answers && typeof progress.answers === 'object') ? progress.answers : {};
+
+      const resultAnswersCount = Object.keys(resultAnswersMap).length;
+      const progressAnswersCount = Object.keys(progressAnswersMap).length || progress?.answeredCount || 0;
+      const rawCount = Math.max(resultAnswersCount, progressAnswersCount);
+
+      const isCompleted = Boolean(
+        (latestResult && resultAnswersCount > 0) ||
+        progress?.isCompleted ||
+        rawCount >= 45
+      );
+
+      const totalQuestions = progress?.totalQuestions || 45;
+      const answeredCount = isCompleted ? totalQuestions : rawCount;
+      const percentage = isCompleted ? 100 : Math.min(100, Math.round((answeredCount / totalQuestions) * 100));
+      const status = isCompleted ? 'Completed' : (answeredCount > 0 ? 'In Progress' : 'Not Started');
 
       return {
         ...s,
@@ -93,12 +109,13 @@ class AdminService {
         mobile: s.phone,
         assessment: {
           isCompleted,
-          status: isCompleted ? 'Completed' : answeredCount > 0 ? 'In Progress' : 'Not Started',
-          answeredCount: isCompleted ? 45 : answeredCount,
-          totalQuestions: 45,
-          leftCount: Math.max(0, 45 - (isCompleted ? 45 : answeredCount)),
-          percentage: isCompleted ? 100 : Math.round((answeredCount / 45) * 100),
-          evaluatedAt: latestResult?.createdAt || null,
+          status,
+          answeredCount,
+          totalQuestions,
+          leftCount: Math.max(0, totalQuestions - answeredCount),
+          percentage,
+          answers: Object.keys(resultAnswersMap).length > 0 ? resultAnswersMap : progressAnswersMap,
+          evaluatedAt: latestResult?.createdAt || progress?.updatedAt || null,
         },
         assessmentResult: latestResult ? {
           ...latestResult,
@@ -124,12 +141,18 @@ class AdminService {
    * @param {string} userId
    */
   async getStudentAssessmentReport(userId) {
+    const cleanId = String(userId || '').trim();
+    const whereOr = [
+      { userId: cleanId },
+      { phone: cleanId },
+    ];
+    if (!isNaN(Number(cleanId))) {
+      whereOr.push({ id: Number(cleanId) });
+    }
+
     const student = await prisma.user.findFirst({
       where: {
-        OR: [
-          { userId },
-          { phone: userId },
-        ],
+        OR: whereOr,
       },
       select: {
         id: true,
@@ -146,6 +169,7 @@ class AdminService {
         pincode: true,
         address: true,
         createdAt: true,
+        assessmentProgress: true,
         assessmentResults: {
           orderBy: { createdAt: 'desc' },
           take: 1,

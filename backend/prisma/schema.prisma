@@ -27,11 +27,12 @@ model User {
   pincode           String?
   address           String?            @db.Text
   education         String?
-  avatar            String?            @db.LongText
-  refreshToken      String?            @map("refresh_token") @db.Text
-  createdAt         DateTime           @default(now()) @map("created_at")
-  updatedAt         DateTime           @updatedAt @map("updated_at")
-  assessmentResults AssessmentResult[]
+  avatar             String?            @db.LongText
+  refreshToken       String?            @map("refresh_token") @db.Text
+  createdAt          DateTime           @default(now()) @map("created_at")
+  updatedAt          DateTime           @updatedAt @map("updated_at")
+  assessmentProgress Json?              @map("assessment_progress")
+  assessmentResults  AssessmentResult[]
 
   @@map("users")
 }
