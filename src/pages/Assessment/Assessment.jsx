@@ -12,6 +12,7 @@ import {
 } from '@/constants/assessmentQuestions'
 import { questionService } from '@/services/assessment/questionService'
 import { notifyAssessmentUpdated } from '@/utils/assessmentProgress'
+import RetakeConfirmModal from '@/components/common/RetakeConfirmModal'
 
 const getProgressKey = (userId) => `ccc_assessment_progress_${userId || 'guest'}`
 
@@ -19,7 +20,8 @@ export function Assessment() {
   const { t, language } = useTranslation()
   const { user } = useAuth()
   const navigate = useNavigate()
-  const progressKey = getProgressKey(user?.id)
+  const candidateUserId = user?.userId || user?.id
+  const progressKey = getProgressKey(candidateUserId)
 
   // Scroll references
   const activeSectionTabRef = useRef(null)
@@ -93,6 +95,10 @@ export function Assessment() {
 
   // Final Review Modal before submission
   const [showReviewModal, setShowReviewModal] = useState(false)
+
+  // Retake Confirmation Modal State
+  const [isRetakeModalOpen, setIsRetakeModalOpen] = useState(false)
+  const [isResetting, setIsResetting] = useState(false)
 
   // Subtle section transition toast
   const [sectionNotice, setSectionNotice] = useState(null)
@@ -388,18 +394,53 @@ export function Assessment() {
   }
 
   const handleRetake = () => {
+    setIsRetakeModalOpen(true)
+  }
+
+  const handleConfirmRetake = async () => {
+    setIsResetting(true)
+    const targetUserId = user?.userId || user?.id
+
+    try {
+      // 1. Delete all test results and clear in-progress assessment in MySQL database
+      await questionService.resetAssessment(targetUserId)
+    } catch (err) {
+      console.warn('Backend assessment reset notice:', err.message)
+    }
+
+    // 2. Erase local storage data for this user
+    try {
+      localStorage.removeItem(progressKey)
+      localStorage.removeItem(`ccc_recommendation_${targetUserId || 'guest'}`)
+      localStorage.removeItem('ccc_active_assessment_progress')
+    } catch {
+      // Ignore
+    }
+
+    // 3. Ensure questions are loaded
+    if (!questions || questions.length === 0) {
+      try {
+        const fetched = await questionService.fetchAssessmentQuestions()
+        if (Array.isArray(fetched) && fetched.length > 0) {
+          setQuestions(fetched)
+        }
+      } catch (e) {
+        console.warn('Error fetching questions on retake:', e)
+      }
+    }
+
+    // 4. Reset in-memory test state and start test fresh from question 1
     setAnswers({})
     setSkippedIds([])
     setMarkedIds([])
     setCurrentIndex(0)
     setIsCompleted(false)
-    setIsStarted(false)
-    try {
-      localStorage.removeItem(progressKey)
-    } catch {
-      // Ignore
-    }
+    setIsStarted(true)
+    setIsResetting(false)
+    setIsRetakeModalOpen(false)
+
     notifyAssessmentUpdated()
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   // ---------------------------------------------------------------------------
@@ -520,73 +561,82 @@ export function Assessment() {
   // ---------------------------------------------------------------------------
   if (isCompleted) {
     return (
-      <div className="py-8 sm:py-14 px-3 sm:px-4">
-        <div className="max-w-2xl mx-auto">
-          <Card className="p-5 sm:p-8 text-center rounded-2xl sm:rounded-3xl border border-slate-200 bg-white">
-            <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xl inline-flex items-center justify-center mb-3 font-bold">
-              ✓
-            </div>
-            <h1 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">
-              {t('assessment.results.badge')}
-            </h1>
-            <p className="text-xs sm:text-sm text-slate-600 mb-6 max-w-md mx-auto leading-relaxed">
-              Assessment submitted successfully for <strong className="text-slate-900">{user?.fullName || 'Student'}</strong>. All sectional responses have been logged.
-            </p>
-
-            {/* Sectional Summary (Clean Text) */}
-            <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl mb-6 text-left">
-              <div className="flex items-center justify-between text-xs font-bold text-slate-700 mb-3 pb-2 border-b border-slate-200">
-                <span>Sectional Completion</span>
-                <span className="text-emerald-700">{answeredCount} of {totalQuestions} Answered</span>
+      <>
+        <div className="py-8 sm:py-14 px-3 sm:px-4">
+          <div className="max-w-2xl mx-auto">
+            <Card className="p-5 sm:p-8 text-center rounded-2xl sm:rounded-3xl border border-slate-200 bg-white">
+              <div className="w-12 h-12 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xl inline-flex items-center justify-center mb-3 font-bold">
+                ✓
               </div>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                {sectionsData.map((sec) => {
-                  const localized = getLocalizedSection(sec, language)
-                  return (
-                    <div
-                      key={sec.id}
-                      className="p-2.5 bg-white rounded-lg border border-slate-200 flex items-center justify-between"
-                    >
-                      <span className="font-semibold text-slate-900">
-                        {sec.order}. {localized.title}
-                      </span>
-                      <span className="font-mono text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded text-[11px]">
-                        {sec.answeredCount} / {sec.questionCount}
-                      </span>
-                    </div>
-                  )
-                })}
-              </div>
-            </div>
+              <h1 className="text-xl sm:text-2xl font-bold text-slate-900 mb-2">
+                {t('assessment.results.badge')}
+              </h1>
+              <p className="text-xs sm:text-sm text-slate-600 mb-6 max-w-md mx-auto leading-relaxed">
+                Assessment submitted successfully for <strong className="text-slate-900">{user?.fullName || 'Student'}</strong>. All sectional responses have been logged.
+              </p>
 
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5">
-              <Button
-                to={ROUTES.USER_DASHBOARD}
-                variant="primary"
-                size="md"
-                className="w-full sm:w-auto shadow-xs text-sm"
-              >
-                {t('home.hero.ctaDashboard')} &rarr;
-              </Button>
-              <Button
-                to={ROUTES.CAREER}
-                variant="outline"
-                size="md"
-                className="w-full sm:w-auto text-sm"
-              >
-                {t('common.exploreCareers')}
-              </Button>
-              <button
-                type="button"
-                onClick={handleRetake}
-                className="text-xs font-medium text-slate-500 hover:text-slate-900 py-1.5 px-3 rounded hover:bg-slate-100 transition-colors cursor-pointer"
-              >
-                {t('assessment.results.retakeBtn')}
-              </button>
-            </div>
-          </Card>
+              {/* Sectional Summary (Clean Text) */}
+              <div className="p-4 bg-slate-50 border border-slate-200 rounded-xl mb-6 text-left">
+                <div className="flex items-center justify-between text-xs font-bold text-slate-700 mb-3 pb-2 border-b border-slate-200">
+                  <span>Sectional Completion</span>
+                  <span className="text-emerald-700">{answeredCount} of {totalQuestions} Answered</span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
+                  {sectionsData.map((sec) => {
+                    const localized = getLocalizedSection(sec, language)
+                    return (
+                      <div
+                        key={sec.id}
+                        className="p-2.5 bg-white rounded-lg border border-slate-200 flex items-center justify-between"
+                      >
+                        <span className="font-semibold text-slate-900">
+                          {sec.order}. {localized.title}
+                        </span>
+                        <span className="font-mono text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded text-[11px]">
+                          {sec.answeredCount} / {sec.questionCount}
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              </div>
+
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-2.5">
+                <Button
+                  to={ROUTES.USER_DASHBOARD}
+                  variant="primary"
+                  size="md"
+                  className="w-full sm:w-auto shadow-xs text-sm"
+                >
+                  {t('home.hero.ctaDashboard')} &rarr;
+                </Button>
+                <Button
+                  to={ROUTES.CAREER}
+                  variant="outline"
+                  size="md"
+                  className="w-full sm:w-auto text-sm"
+                >
+                  {t('common.exploreCareers')}
+                </Button>
+                <button
+                  type="button"
+                  onClick={handleRetake}
+                  className="text-xs font-medium text-slate-500 hover:text-slate-900 py-1.5 px-3 rounded hover:bg-slate-100 transition-colors cursor-pointer"
+                >
+                  {t('assessment.results.retakeBtn')}
+                </button>
+              </div>
+            </Card>
+          </div>
         </div>
-      </div>
+
+        <RetakeConfirmModal
+          isOpen={isRetakeModalOpen}
+          onClose={() => !isResetting && setIsRetakeModalOpen(false)}
+          onConfirm={handleConfirmRetake}
+          isLoading={isResetting}
+        />
+      </>
     )
   }
 
@@ -1368,6 +1418,13 @@ export function Assessment() {
           </div>
         )}
       </div>
+
+      <RetakeConfirmModal
+        isOpen={isRetakeModalOpen}
+        onClose={() => !isResetting && setIsRetakeModalOpen(false)}
+        onConfirm={handleConfirmRetake}
+        isLoading={isResetting}
+      />
     </div>
   )
 }

@@ -43,6 +43,7 @@ async function optionalAuth(req, res, next) {
 
 router.post('/progress', optionalAuth, assessmentController.saveProgress);
 router.get('/progress', optionalAuth, assessmentController.getProgress);
+router.post('/reset', optionalAuth, assessmentController.resetAssessment);
 router.post('/submit', optionalAuth, assessmentController.submitAssessment);
 router.get('/latest', protect, assessmentController.getLatestResult);
 

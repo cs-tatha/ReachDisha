@@ -1,6 +1,8 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import LogoutConfirmModal from '@/components/common/LogoutConfirmModal'
+import RetakeConfirmModal from '@/components/common/RetakeConfirmModal'
+import { getAssessmentStorageKey, notifyAssessmentUpdated } from '@/utils/assessmentProgress'
 import Button from '@/components/ui/Button'
 import Card from '@/components/ui/Card'
 import Input from '@/components/ui/Input'
@@ -52,6 +54,45 @@ export function Dashboard() {
     setIsLogoutModalOpen(false)
     logout()
     navigate(ROUTES.LOGIN, { replace: true })
+  }
+
+  // Retake confirmation modal state
+  const [isRetakeModalOpen, setIsRetakeModalOpen] = useState(false)
+  const [isResettingAssessment, setIsResettingAssessment] = useState(false)
+
+  const handleConfirmRetake = async () => {
+    setIsResettingAssessment(true)
+    const targetUserId = user?.userId || user?.id
+
+    try {
+      // 1. Delete all test-related records from MySQL database
+      await questionService.resetAssessment(targetUserId)
+    } catch (err) {
+      console.warn('Backend reset assessment notice:', err.message)
+    }
+
+    // 2. Erase all local storage keys for this user
+    try {
+      if (targetUserId) {
+        localStorage.removeItem(getAssessmentStorageKey(targetUserId))
+        localStorage.removeItem(`ccc_assessment_progress_${targetUserId}`)
+        localStorage.removeItem(`ccc_recommendation_${targetUserId}`)
+      }
+      if (user?.id) {
+        localStorage.removeItem(`ccc_assessment_progress_${user.id}`)
+        localStorage.removeItem(`ccc_recommendation_${user.id}`)
+      }
+      localStorage.removeItem('ccc_assessment_progress_guest')
+      localStorage.removeItem('ccc_recommendation_guest')
+      localStorage.removeItem('ccc_active_assessment_progress')
+    } catch {
+      // Ignore
+    }
+
+    notifyAssessmentUpdated()
+    setIsResettingAssessment(false)
+    setIsRetakeModalOpen(false)
+    navigate(ROUTES.ASSESSMENT)
   }
 
   // Assessment Progress State
@@ -949,13 +990,14 @@ export function Dashboard() {
                           <span>🖨️</span>
                           <span>Print / PDF</span>
                         </button>
-                        <Link
-                          to={ROUTES.ASSESSMENT}
-                          className="px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center gap-1.5 shadow-2xs"
+                        <button
+                          type="button"
+                          onClick={() => setIsRetakeModalOpen(true)}
+                          className="px-3.5 py-2 rounded-xl text-xs font-bold bg-blue-600 text-white hover:bg-blue-700 transition-colors flex items-center gap-1.5 shadow-2xs cursor-pointer"
                         >
                           <span>🔄</span>
                           <span>Retake</span>
-                        </Link>
+                        </button>
                       </div>
                     </div>
 
@@ -1608,6 +1650,14 @@ export function Dashboard() {
         onClose={() => setIsLogoutModalOpen(false)}
         onConfirm={handleLogout}
         isAdmin={false}
+      />
+
+      {/* Confirmation Dialog for Assessment Retake */}
+      <RetakeConfirmModal
+        isOpen={isRetakeModalOpen}
+        onClose={() => !isResettingAssessment && setIsRetakeModalOpen(false)}
+        onConfirm={handleConfirmRetake}
+        isLoading={isResettingAssessment}
       />
     </div>
   )

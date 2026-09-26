@@ -74,7 +74,14 @@
     "sectionalBreakdown": "Sectional Completion Overview",
     "sectionStatusCompleted": "Completed",
     "sectionStatusPending": "{{count}} pending",
-    "jumpPrompt": "Click any section to jump directly to its questions."
+    "jumpPrompt": "Click any section to jump directly to its questions.",
+    "retakeBadge": "Erase & Retake Assessment",
+    "retakeConfirmTitle": "Are you sure you want to retake the test?",
+    "retakeConfirmDesc": "This will permanently erase your previous answers, scores, and evaluation from the database. The assessment will start again from Question 1.",
+    "retakeWarning": "All current sectional scores, answers, and recommendation report will be permanently reset.",
+    "retakeConfirmBtn": "Yes, Erase & Retake",
+    "retakeCancelBtn": "Cancel",
+    "retaking": "Resetting..."
   },
   "results": {
     "badge": "Assessment Complete",

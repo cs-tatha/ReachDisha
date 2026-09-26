@@ -265,6 +265,40 @@ export const questionService = {
   },
 
   /**
+   * Erases all assessment results and progress for candidate from MySQL
+   * @param {string} [candidateUserId]
+   */
+  async resetAssessment(candidateUserId = null) {
+    try {
+      const session = authService.getCurrentSession()
+      const token = session?.accessToken || session?.token
+      const targetUserId = candidateUserId || session?.user?.userId || session?.user?.id
+
+      const response = await fetch(`${API_BASE_URL}/assessment/reset`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        body: JSON.stringify({
+          userId: targetUserId,
+        }),
+      })
+
+      if (!response.ok) {
+        const err = await response.json().catch(() => ({}))
+        throw new Error(err.message || 'Failed to reset assessment on server')
+      }
+
+      const res = await response.json()
+      return res.data
+    } catch (err) {
+      console.warn('[QuestionService] Reset error:', err.message)
+      throw err
+    }
+  },
+
+  /**
    * Retrieves the latest assessment result for the authenticated user
    */
   async getLatestAssessmentResult() {

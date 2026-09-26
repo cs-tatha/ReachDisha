@@ -153,6 +153,63 @@ class AssessmentController {
   }
 
   /**
+   * Resets candidate's assessment: deletes all AssessmentResult records and clears assessmentProgress in MySQL
+   */
+  async resetAssessment(req, res, next) {
+    try {
+      const { userId } = req.body;
+
+      let targetUserId = null;
+      if (req.user?.role === 'student' && req.user?.userId) {
+        targetUserId = req.user.userId;
+      } else if (userId) {
+        const cleanId = String(userId).trim();
+        const candidate = await prisma.user.findFirst({
+          where: {
+            OR: [
+              { userId: cleanId },
+              { phone: cleanId },
+            ],
+          },
+          select: { userId: true },
+        });
+        if (candidate) targetUserId = candidate.userId;
+      } else if (req.user?.userId) {
+        targetUserId = req.user.userId;
+      }
+
+      if (!targetUserId) {
+        return sendError(res, 400, 'Cannot reset assessment: candidate identification is required.');
+      }
+
+      // Delete all previous assessment results from MySQL database
+      await prisma.assessmentResult.deleteMany({
+        where: { userId: targetUserId },
+      });
+
+      // Clear in-progress assessment tracking on the student user record
+      const existingUser = await prisma.user.findUnique({
+        where: { userId: targetUserId },
+        select: { id: true },
+      });
+
+      if (existingUser) {
+        await prisma.user.update({
+          where: { userId: targetUserId },
+          data: { assessmentProgress: null },
+        });
+      }
+
+      return sendSuccess(res, 200, 'Assessment data successfully reset.', {
+        userId: targetUserId,
+        reset: true,
+      });
+    } catch (error) {
+      next(error);
+    }
+  }
+
+  /**
    * Retrieves saved in-progress responses for the candidate
    */
   async getProgress(req, res, next) {
