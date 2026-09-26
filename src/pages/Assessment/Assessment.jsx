@@ -411,7 +411,13 @@ export function Assessment() {
     // 2. Erase local storage data for this user
     try {
       localStorage.removeItem(progressKey)
-      localStorage.removeItem(`ccc_recommendation_${targetUserId || 'guest'}`)
+      if (targetUserId) {
+        localStorage.removeItem(`ccc_recommendation_${targetUserId}`)
+      }
+      if (user?.id) {
+        localStorage.removeItem(`ccc_recommendation_${user.id}`)
+      }
+      localStorage.removeItem('ccc_recommendation_guest')
       localStorage.removeItem('ccc_active_assessment_progress')
     } catch {
       // Ignore

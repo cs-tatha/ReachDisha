@@ -89,6 +89,14 @@ export function Dashboard() {
       // Ignore
     }
 
+    setAssessmentData({
+      isStarted: true,
+      isCompleted: false,
+      answers: {},
+      answeredCount: 0,
+    })
+    setRecommendationData(null)
+
     notifyAssessmentUpdated()
     setIsResettingAssessment(false)
     setIsRetakeModalOpen(false)
@@ -98,17 +106,27 @@ export function Dashboard() {
   // Assessment Progress State
   const [assessmentData, setAssessmentData] = useState(() => {
     try {
-      const raw = localStorage.getItem(`ccc_assessment_progress_${user?.id || 'guest'}`)
+      const key = user?.userId || user?.id || 'guest'
+      const raw = localStorage.getItem(`ccc_assessment_progress_${key}`) || localStorage.getItem(`ccc_assessment_progress_${user?.id || 'guest'}`)
       return raw ? JSON.parse(raw) : null
     } catch {
       return null
     }
   })
 
-  // Career Assessment Recommendation Report State
+  // Career Assessment Recommendation Report State (Erased during active re-test)
   const [recommendationData, setRecommendationData] = useState(() => {
     try {
-      const raw = localStorage.getItem(`ccc_recommendation_${user?.id || 'guest'}`)
+      const key = user?.userId || user?.id || 'guest'
+      const progRaw = localStorage.getItem(`ccc_assessment_progress_${key}`) || localStorage.getItem(`ccc_assessment_progress_${user?.id || 'guest'}`)
+      if (progRaw) {
+        const prog = JSON.parse(progRaw)
+        // If actively taking or re-taking a test that is not completed, previous report is ERASED
+        if (prog?.isStarted && !prog?.isCompleted) {
+          return null
+        }
+      }
+      const raw = localStorage.getItem(`ccc_recommendation_${key}`) || localStorage.getItem(`ccc_recommendation_${user?.id || 'guest'}`)
       return raw ? JSON.parse(raw) : null
     } catch {
       return null
@@ -116,37 +134,59 @@ export function Dashboard() {
   })
   const [isLoadingReport, setIsLoadingReport] = useState(false)
 
-  // Reload assessment progress whenever user returns to the tab
+  // Reload assessment progress and synchronize report state whenever window receives focus or update event
   useEffect(() => {
-    const handleFocus = () => {
+    const handleSync = () => {
       try {
-        const raw = localStorage.getItem(`ccc_assessment_progress_${user?.id || 'guest'}`)
-        if (raw) {
-          setAssessmentData(JSON.parse(raw))
-        }
-        const recRaw = localStorage.getItem(`ccc_recommendation_${user?.id || 'guest'}`)
-        if (recRaw) {
-          setRecommendationData(JSON.parse(recRaw))
+        const key = user?.userId || user?.id || 'guest'
+        const progRaw = localStorage.getItem(`ccc_assessment_progress_${key}`) || localStorage.getItem(`ccc_assessment_progress_${user?.id || 'guest'}`)
+        const parsedProg = progRaw ? JSON.parse(progRaw) : null
+        setAssessmentData(parsedProg)
+
+        // If actively re-testing, ERASE previous recommendation report
+        if (parsedProg?.isStarted && !parsedProg?.isCompleted) {
+          setRecommendationData(null)
+        } else {
+          const recRaw = localStorage.getItem(`ccc_recommendation_${key}`) || localStorage.getItem(`ccc_recommendation_${user?.id || 'guest'}`)
+          setRecommendationData(recRaw ? JSON.parse(recRaw) : null)
         }
       } catch {
         // Ignore
       }
     }
-    window.addEventListener('focus', handleFocus)
-    return () => window.removeEventListener('focus', handleFocus)
-  }, [user?.id])
+    window.addEventListener('focus', handleSync)
+    window.addEventListener('ccc_assessment_updated', handleSync)
+    return () => {
+      window.removeEventListener('focus', handleSync)
+      window.removeEventListener('ccc_assessment_updated', handleSync)
+    }
+  }, [user?.id, user?.userId])
 
   // Synchronize latest assessment evaluation from Express / MySQL backend
   useEffect(() => {
     let isMounted = true
     const fetchLatestReport = async () => {
-      if (!user?.id) return
+      const targetId = user?.userId || user?.id
+      if (!targetId) return
+
+      // If active re-test is currently underway and not completed, previous report is erased
+      if (assessmentData?.isStarted && !assessmentData?.isCompleted) {
+        if (isMounted) setRecommendationData(null)
+        return
+      }
+
       try {
         setIsLoadingReport(true)
         const latest = await questionService.getLatestAssessmentResult()
-        if (isMounted && latest) {
-          setRecommendationData(latest)
-          localStorage.setItem(`ccc_recommendation_${user.id}`, JSON.stringify(latest))
+        if (isMounted) {
+          if (latest) {
+            setRecommendationData(latest)
+            localStorage.setItem(`ccc_recommendation_${targetId}`, JSON.stringify(latest))
+          } else {
+            setRecommendationData(null)
+            localStorage.removeItem(`ccc_recommendation_${targetId}`)
+            localStorage.removeItem(`ccc_recommendation_${user?.id}`)
+          }
         }
       } catch (err) {
         console.warn('[Dashboard] Could not fetch latest assessment result:', err)
@@ -155,24 +195,24 @@ export function Dashboard() {
       }
     }
 
-    if (user?.id) {
-      fetchLatestReport()
-    }
+    fetchLatestReport()
 
     return () => {
       isMounted = false
     }
-  }, [user?.id])
+  }, [user?.id, user?.userId, assessmentData?.isStarted, assessmentData?.isCompleted])
 
   const totalQuestions = questionService.getTotalQuestions() || TOTAL_ASSESSMENT_QUESTIONS
   const answeredCount = Object.keys(assessmentData?.answers || {}).length
   const leftCount = Math.max(0, totalQuestions - answeredCount)
   const progressPercent = Math.round((answeredCount / totalQuestions) * 100)
-  const isCompleted = Boolean(assessmentData?.isCompleted || recommendationData)
+  const isRetesting = Boolean(assessmentData?.isStarted && !assessmentData?.isCompleted)
+  const effectiveRecommendation = isRetesting ? null : recommendationData
+  const isCompleted = Boolean(!isRetesting && (assessmentData?.isCompleted || effectiveRecommendation))
 
   // Active Tab: Derived directly from URL query param (?tab=profile|assessment|report|support)
   const currentTabFromUrl = searchParams.get('tab')
-  const defaultTab = recommendationData ? 'report' : isCompleted ? 'report' : answeredCount > 0 ? 'assessment' : 'profile'
+  const defaultTab = effectiveRecommendation ? 'report' : isCompleted ? 'report' : answeredCount > 0 ? 'assessment' : 'profile'
   const activeTab =
     currentTabFromUrl && ['profile', 'assessment', 'report', 'support'].includes(currentTabFromUrl)
       ? currentTabFromUrl
@@ -228,7 +268,7 @@ export function Dashboard() {
       {
         id: 'report',
         title: t('dashboard.student.tabs.report'),
-        statusDot: Boolean(recommendationData || isCompleted),
+        statusDot: Boolean(effectiveRecommendation && isCompleted),
         icon: (
           <svg
             className="w-5 h-5 sm:w-6 sm:h-6"
@@ -268,7 +308,7 @@ export function Dashboard() {
         ),
       },
     ],
-    [t, answeredCount, recommendationData, isCompleted]
+    [t, answeredCount, effectiveRecommendation, isCompleted]
   )
 
   // Avatar Upload State
@@ -940,7 +980,7 @@ export function Dashboard() {
             {/* CARD 3: Psychometric Report Card View */}
             {activeTab === 'report' && (
               <div className="space-y-6 animate-in fade-in duration-200">
-                {isLoadingReport && !recommendationData ? (
+                {isLoadingReport && !effectiveRecommendation ? (
                   <Card className="p-8 sm:p-12 text-center rounded-3xl border border-slate-200 bg-white">
                     <div className="w-12 h-12 mx-auto mb-4 rounded-2xl bg-blue-600 text-white flex items-center justify-center shadow-sm">
                       <svg className="w-6 h-6 animate-spin" fill="none" viewBox="0 0 24 24">
@@ -953,7 +993,7 @@ export function Dashboard() {
                       Retrieving evaluation, skill domains, and career matches from the database...
                     </p>
                   </Card>
-                ) : recommendationData ? (
+                ) : effectiveRecommendation ? (
                   <Card className="p-6 sm:p-8 rounded-3xl border border-slate-200 shadow-xs bg-white relative overflow-hidden">
                     {/* Header & Verification Metadata */}
                     <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-100 pb-6 mb-6">
@@ -963,9 +1003,9 @@ export function Dashboard() {
                             <span>✓</span>
                             <span>Assessment Evaluated</span>
                           </span>
-                          {recommendationData.evaluatedAt && (
+                          {effectiveRecommendation.evaluatedAt && (
                             <span className="text-xs text-slate-500 bg-slate-100 px-2.5 py-1 rounded-full font-medium">
-                              📅 {new Date(recommendationData.evaluatedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
+                              📅 {new Date(effectiveRecommendation.evaluatedAt).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' })}
                             </span>
                           )}
                           <span className="text-xs text-blue-700 bg-blue-50 border border-blue-200 px-2.5 py-1 rounded-full font-semibold">
@@ -1018,7 +1058,7 @@ export function Dashboard() {
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {recommendationData.topSkillDomains?.map((domain, index) => {
+                        {effectiveRecommendation.topSkillDomains?.map((domain, index) => {
                           const rankLabels = [
                             { title: 'Rank #1 Core Domain', badge: 'bg-amber-100 text-amber-900 border-amber-300', ring: 'border-amber-400 bg-amber-50/40' },
                             { title: 'Rank #2 Primary Domain', badge: 'bg-blue-100 text-blue-900 border-blue-300', ring: 'border-blue-400 bg-blue-50/40' },
@@ -1126,7 +1166,7 @@ export function Dashboard() {
                       </div>
 
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {recommendationData.recommendedCareers?.map((career, cIdx) => (
+                        {effectiveRecommendation.recommendedCareers?.map((career, cIdx) => (
                           <div
                             key={career.id || cIdx}
                             className="p-5 rounded-2xl border border-slate-200 bg-slate-50/60 hover:bg-white hover:border-blue-300 transition-all shadow-2xs flex flex-col justify-between"
@@ -1207,9 +1247,9 @@ export function Dashboard() {
                           </div>
                         </div>
 
-                        {recommendationData.topStrengths && recommendationData.topStrengths.length > 0 ? (
+                        {effectiveRecommendation.topStrengths && effectiveRecommendation.topStrengths.length > 0 ? (
                           <div className="space-y-2.5">
-                            {recommendationData.topStrengths.map((item, idx) => (
+                            {effectiveRecommendation.topStrengths.map((item, idx) => (
                               <div key={idx} className="p-2.5 bg-white rounded-xl border border-emerald-100 shadow-2xs">
                                 <div className="flex justify-between text-xs font-bold text-slate-800 mb-1">
                                   <span>{item.trait}</span>
@@ -1243,9 +1283,9 @@ export function Dashboard() {
                           </div>
                         </div>
 
-                        {recommendationData.skillGaps && recommendationData.skillGaps.length > 0 ? (
+                        {effectiveRecommendation.skillGaps && effectiveRecommendation.skillGaps.length > 0 ? (
                           <div className="space-y-2.5">
-                            {recommendationData.skillGaps.map((item, idx) => (
+                            {effectiveRecommendation.skillGaps.map((item, idx) => (
                               <div key={idx} className="p-2.5 bg-white rounded-xl border border-amber-100 shadow-2xs">
                                 <div className="flex justify-between text-xs font-bold text-slate-800 mb-1">
                                   <span>{item.trait}</span>
@@ -1272,19 +1312,23 @@ export function Dashboard() {
                   /* Fallback when assessment is not completed or submitted */
                   <Card className="p-8 sm:p-10 rounded-3xl border border-slate-200 shadow-xs bg-white text-center">
                     <div className="w-16 h-16 mx-auto mb-4 rounded-3xl bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center text-3xl shadow-xs">
-                      📋
+                      {isRetesting ? '🔄' : '📋'}
                     </div>
                     <h3 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight mb-2">
-                      Your Career Assessment Report is Ready to Unlock
+                      {isRetesting
+                        ? 'Re-Test In Progress — Previous Report Erased'
+                        : 'Your Career Assessment Report is Ready to Unlock'}
                     </h3>
                     <p className="text-xs sm:text-sm text-slate-600 max-w-lg mx-auto mb-6">
-                      Complete the 45-question psychometric assessment across 6 sections to generate your Top 3 Skill Domains, benchmark career matches, and personalized strengths breakdown.
+                      {isRetesting
+                        ? 'You have initiated a re-test. All previous evaluation scores and career reports have been permanently erased from the database. Complete and submit your re-test to generate an updated report.'
+                        : 'Complete the 45-question psychometric assessment across 6 sections to generate your Top 3 Skill Domains, benchmark career matches, and personalized strengths breakdown.'}
                     </p>
 
                     {/* Progress bar preview */}
                     <div className="max-w-md mx-auto p-4 rounded-2xl bg-slate-50 border border-slate-200 mb-6">
                       <div className="flex items-center justify-between text-xs font-bold text-slate-700 mb-1.5">
-                        <span>Assessment Progress</span>
+                        <span>{isRetesting ? 'Re-Test Progress' : 'Assessment Progress'}</span>
                         <span className="font-mono text-blue-600">{answeredCount} / {totalQuestions} answered ({progressPercent}%)</span>
                       </div>
                       <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden">

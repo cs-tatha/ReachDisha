@@ -57,8 +57,14 @@ class AssessmentController {
           },
         });
 
-        // Also update assessmentProgress to Completed
+        // Also update assessmentProgress to Completed and preserve retakeCount
         try {
+          const userRecord = await prisma.user.findUnique({
+            where: { userId: targetUserId },
+            select: { retakeCount: true },
+          });
+          const totalQ = Object.keys(answers || {}).length || 66;
+
           await prisma.user.update({
             where: { userId: targetUserId },
             data: {
@@ -66,10 +72,11 @@ class AssessmentController {
                 answers,
                 isStarted: true,
                 isCompleted: true,
-                answeredCount: 45,
-                totalQuestions: 45,
+                answeredCount: totalQ,
+                totalQuestions: totalQ,
                 percentage: 100,
                 status: 'Completed',
+                retakeCount: userRecord?.retakeCount || 0,
                 updatedAt: new Date().toISOString(),
               },
             },
@@ -190,12 +197,13 @@ class AssessmentController {
       // Increment retakeCount and initialize fresh assessment progress
       const existingUser = await prisma.user.findUnique({
         where: { userId: targetUserId },
-        select: { id: true, retakeCount: true },
+        select: { id: true, retakeCount: true, assessmentProgress: true },
       });
 
       let updatedRetakeCount = 1;
       if (existingUser) {
         updatedRetakeCount = (existingUser.retakeCount || 0) + 1;
+        const totalQuestions = existingUser.assessmentProgress?.totalQuestions || 45;
         await prisma.user.update({
           where: { userId: targetUserId },
           data: {
@@ -206,7 +214,7 @@ class AssessmentController {
               currentIndex: 0,
               answers: {},
               answeredCount: 0,
-              totalQuestions: 66,
+              totalQuestions,
               retakeCount: updatedRetakeCount,
               updatedAt: new Date().toISOString(),
             },
@@ -258,6 +266,17 @@ class AssessmentController {
     try {
       if (!req.user?.userId) {
         return sendError(res, 401, 'Authentication required to view assessment history.');
+      }
+
+      // Check if student is actively taking or retaking the assessment
+      const user = await prisma.user.findUnique({
+        where: { userId: req.user.userId },
+        select: { assessmentProgress: true },
+      });
+
+      // If active re-test is underway and not yet completed, previous report is erased
+      if (user?.assessmentProgress?.isStarted && !user?.assessmentProgress?.isCompleted) {
+        return sendSuccess(res, 200, 'Assessment is currently in progress; previous report is erased.', null);
       }
 
       const latest = await prisma.assessmentResult.findFirst({

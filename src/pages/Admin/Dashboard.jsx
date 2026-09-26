@@ -103,16 +103,26 @@ export function AdminDashboard() {
 
   const handleOpenStudentReport = async (student) => {
     setSelectedStudentForReport(student)
+
+    // If candidate is actively re-testing, previous report is erased
+    if (!student.assessment?.isCompleted) {
+      setStudentReportData(null)
+      return
+    }
+
     setStudentReportData(student.assessmentResult || null)
 
     try {
       setIsLoadingStudentReport(true)
       const res = await authService.getStudentAssessmentReport(student.userId || student.phone || student.id)
-      if (res?.report) {
+      if (res?.report && !res?.student?.isActivelyRetaking) {
         setStudentReportData(res.report)
+      } else {
+        setStudentReportData(null)
       }
     } catch (err) {
       console.warn('Failed to load full student report:', err)
+      setStudentReportData(null)
     } finally {
       setIsLoadingStudentReport(false)
     }
@@ -1773,12 +1783,18 @@ export function AdminDashboard() {
                   <h3 className="text-base font-bold text-slate-800">Loading Student Report...</h3>
                   <p className="text-xs text-slate-500">Retrieving evaluation from MySQL database...</p>
                 </div>
-              ) : !studentReportData || (!studentReportData.topSkillDomains && !studentReportData.traitScores) ? (
+              ) : !studentReportData || (!studentReportData.topSkillDomains && !studentReportData.traitScores) || !selectedStudentForReport.assessment?.isCompleted ? (
                 <div className="p-8 text-center bg-amber-50 rounded-2xl border border-amber-200 text-amber-900 space-y-2">
                   <span className="text-3xl">📝</span>
-                  <h3 className="font-bold text-base">Assessment In Progress / Report Not Yet Generated</h3>
+                  <h3 className="font-bold text-base">
+                    {selectedStudentForReport.retakeCount > 0
+                      ? 'Re-Test Underway — Previous Report Erased'
+                      : 'Assessment In Progress / Report Not Yet Generated'}
+                  </h3>
                   <p className="text-xs text-amber-800 max-w-md mx-auto">
-                    This candidate has not yet completed all 45 situational questions. The full psychometric report card will unlock as soon as the test is submitted.
+                    {selectedStudentForReport.retakeCount > 0
+                      ? `This candidate is currently re-taking the assessment (${selectedStudentForReport.assessment?.answeredCount || 0}/${selectedStudentForReport.assessment?.totalQuestions || 45} answered). All previous report data has been permanently erased. The new psychometric report will be generated as soon as the student finalizes and submits this re-test.`
+                      : `This candidate has not yet completed the assessment (${selectedStudentForReport.assessment?.answeredCount || 0}/${selectedStudentForReport.assessment?.totalQuestions || 45} answered). The psychometric report card will unlock as soon as the test is submitted.`}
                   </p>
                 </div>
               ) : (

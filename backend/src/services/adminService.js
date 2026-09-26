@@ -101,7 +101,7 @@ class AdminService {
         (latestResult && resultAnswersCount > 0)
       );
 
-      const totalQuestions = progress?.totalQuestions || 66;
+      const totalQuestions = progress?.totalQuestions || 45;
       const answeredCount = isCompleted ? totalQuestions : (isActivelyRetaking ? progressAnswersCount : (progressAnswersCount || resultAnswersCount));
       const percentage = isCompleted ? 100 : Math.min(100, Math.round((answeredCount / totalQuestions) * 100));
       const status = isCompleted ? 'Completed' : (answeredCount > 0 ? 'In Progress' : 'Not Started');
@@ -187,7 +187,11 @@ class AdminService {
       return null;
     }
 
-    const latest = student.assessmentResults?.[0] || null;
+    const isActivelyRetaking = Boolean(
+      student.assessmentProgress?.isStarted && !student.assessmentProgress?.isCompleted
+    );
+
+    const latest = isActivelyRetaking ? null : (student.assessmentResults?.[0] || null);
     return {
       student: {
         id: student.userId,
@@ -206,6 +210,7 @@ class AdminService {
         address: student.address,
         createdAt: student.createdAt,
         retakeCount: student.retakeCount || 0,
+        isActivelyRetaking,
       },
       report: latest ? {
         ...latest,
