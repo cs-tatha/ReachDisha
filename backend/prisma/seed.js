@@ -38,11 +38,16 @@ async function main() {
 
   console.log('Admins verified by phone:', admin1.phone, admin2.phone);
 
-  // 2. Clear old questions to prevent ID collision and cleanly seed 45 questions
-  await prisma.option.deleteMany({});
-  await prisma.question.deleteMany({});
+  // 2. Check if questions are already seeded
+  const existingQuestionsCount = await prisma.question.count();
+  if (existingQuestionsCount >= QUESTION_BANK.length) {
+    console.log(`Database already has ${existingQuestionsCount} questions seeded. Skipping question re-seeding.`);
+  } else {
+    // Clear old questions to prevent ID collision and cleanly seed 45 questions
+    await prisma.option.deleteMany({});
+    await prisma.question.deleteMany({});
 
-  console.log(`Seeding ${QUESTION_BANK.length} calibrated questions...`);
+    console.log(`Seeding ${QUESTION_BANK.length} calibrated questions...`);
 
   for (const q of QUESTION_BANK) {
     const questionRecord = await prisma.question.create({
@@ -76,7 +81,8 @@ async function main() {
     }
   }
 
-  console.log('All 45 questions and 225 options successfully seeded into MySQL!');
+    console.log('All 45 questions and 225 options successfully seeded into MySQL!');
+  }
 }
 
 main()
