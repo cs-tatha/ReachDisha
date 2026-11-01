@@ -30,7 +30,6 @@ services:
   - type: web
     name: reach-disha-frontend
     runtime: static
-    plan: free
     rootDir: .
     buildCommand: npm install && npm run build
     staticPublishPath: ./dist
